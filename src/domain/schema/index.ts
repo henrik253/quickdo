@@ -9,7 +9,9 @@ export const INBOX_FILENAME = /^\d{8}T\d{9}Z-[a-z0-9-]{1,40}\.json$/;
 export const TODOS_VERSION = 1;
 
 const HHMM = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'expected HH:MM');
-const ISODate = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'expected YYYY-MM-DD');
+const ISODate = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'expected YYYY-MM-DD');
 const ISOInstant = z
   .string()
   .regex(
@@ -32,11 +34,20 @@ export const RepeatSchema = z.enum([
 ]);
 export const SourceKindSchema = z.enum(['ui', 'hotkey', 'cli', 'agent']);
 
-export const BlockSchema = z.object({ start: HHMM, minutes: z.int().min(5).max(24 * 60) });
+export const BlockSchema = z.object({
+  start: HHMM,
+  minutes: z
+    .int()
+    .min(5)
+    .max(24 * 60),
+});
 
 export const FallbackSchema = z.object({
   title: z.string().max(200).optional(),
-  minutes: z.int().min(1).max(24 * 60),
+  minutes: z
+    .int()
+    .min(1)
+    .max(24 * 60),
   at: HHMM.optional(),
 });
 
@@ -93,7 +104,10 @@ export const ScheduleSchema = z.object({
   version: z.literal(1),
   dayStart: HHMM,
   dayEnd: HHMM,
-  slackMinutes: z.int().min(0).max(24 * 60),
+  slackMinutes: z
+    .int()
+    .min(0)
+    .max(24 * 60),
   anchors: z.array(AnchorSchema),
 });
 
@@ -158,7 +172,11 @@ const InboxAddItemSchema = z
   .object({
     title: z.string().min(1).max(200),
     note: z.string().max(5000).optional(),
-    estimateMin: z.int().min(0).max(24 * 60).optional(),
+    estimateMin: z
+      .int()
+      .min(0)
+      .max(24 * 60)
+      .optional(),
     due: ISODate.optional(),
     suggestedFor: ISODate.optional(),
     project: z.string().max(100).optional(),
@@ -174,7 +192,11 @@ const InboxPatchSchema = z
     title: z.string().min(1).max(200).optional(),
     note: z.string().max(5000).optional(),
     due: ISODate.optional(),
-    estimateMin: z.int().min(0).max(24 * 60).optional(),
+    estimateMin: z
+      .int()
+      .min(0)
+      .max(24 * 60)
+      .optional(),
     project: z.string().max(100).optional(),
     tags: z.array(z.string().max(100)).max(20).optional(),
     cue: z.string().max(500).optional(),
@@ -186,7 +208,9 @@ const InboxPatchSchema = z
 const by = z.string().min(1).max(80);
 
 export const InboxCommandSchema = z.discriminatedUnion('op', [
-  z.object({ v: z.literal(1), op: z.literal('add'), by, at: ISOInstant, item: InboxAddItemSchema }).strict(),
+  z
+    .object({ v: z.literal(1), op: z.literal('add'), by, at: ISOInstant, item: InboxAddItemSchema })
+    .strict(),
   z
     .object({
       v: z.literal(1),
@@ -256,7 +280,10 @@ export function validateInboxCommand(
 }
 
 /** Ordered, pure migration steps: each takes a file at version `from` and returns version `from + 1`. */
-export const MIGRATIONS: ReadonlyArray<{ from: number; run: (raw: Record<string, unknown>) => unknown }> = [];
+export const MIGRATIONS: ReadonlyArray<{
+  from: number;
+  run: (raw: Record<string, unknown>) => unknown;
+}> = [];
 
 /** Migrate a raw todos.json object up to TODOS_VERSION, then validate. */
 export function migrateTodos(raw: unknown): TodosFile {
@@ -265,7 +292,8 @@ export function migrateTodos(raw: unknown): TodosFile {
   }
   let current = raw as Record<string, unknown>;
   let version = typeof current.version === 'number' ? current.version : 1;
-  if (version > TODOS_VERSION) throw new Error(`version: ${version} is newer than supported ${TODOS_VERSION}`);
+  if (version > TODOS_VERSION)
+    throw new Error(`version: ${version} is newer than supported ${TODOS_VERSION}`);
   while (version < TODOS_VERSION) {
     const step = MIGRATIONS.find((m) => m.from === version);
     if (!step) throw new Error(`version: no migration from ${version}`);
@@ -286,6 +314,12 @@ export const JSON_SCHEMAS = {
 export type JsonSchemaName = keyof typeof JSON_SCHEMAS;
 
 export function buildJsonSchema(name: JsonSchemaName): Record<string, unknown> {
-  const schema = z.toJSONSchema(JSON_SCHEMAS[name], { target: 'draft-2020-12', unrepresentable: 'any' });
-  return { ...schema, $id: `https://example.com/quickdo/schema/${name}.schema.json` } as Record<string, unknown>;
+  const schema = z.toJSONSchema(JSON_SCHEMAS[name], {
+    target: 'draft-2020-12',
+    unrepresentable: 'any',
+  });
+  return { ...schema, $id: `https://example.com/quickdo/schema/${name}.schema.json` } as Record<
+    string,
+    unknown
+  >;
 }

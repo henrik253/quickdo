@@ -3,6 +3,7 @@
  * everything unparsed, joined by single spaces, is the title. `"quoted"` words are literal.
  */
 import * as chrono from 'chrono-node';
+import { addDays, hhmmToMin, nextWeekday, nowHHMM, offsetMinutes, padded, todayISO } from '../time';
 import type {
   Clock,
   HHMM,
@@ -13,7 +14,6 @@ import type {
   Token,
   Weekday,
 } from '../types';
-import { addDays, hhmmToMin, nextWeekday, nowHHMM, offsetMinutes, padded, todayISO } from '../time';
 
 const WEEKDAY_WORDS: Record<string, Weekday> = {
   mon: 'mon',
@@ -77,7 +77,9 @@ function isTokenStart(w: Word): boolean {
   const t = w.text;
   const lower = t.toLowerCase();
   if (/^[!@~#+]\S/.test(t)) return true;
-  return lower === 'when' || lower === 'if' || lower === 'then' || lower === 'every' || lower === 'due';
+  return (
+    lower === 'when' || lower === 'if' || lower === 'then' || lower === 'every' || lower === 'due'
+  );
 }
 
 /** A relative/absolute day word: today, tmr, tomorrow, weekday, ISO date. */
@@ -138,7 +140,9 @@ function chronoDate(word: string, clock: Clock): { date: ISODate; time?: HHMM } 
   if (!r || r.index !== 0 || r.text.length !== word.length) return undefined;
   const c = r.start;
   const date = `${c.get('year')}-${pad(c.get('month') ?? 1)}-${pad(c.get('day') ?? 1)}`;
-  const time = c.isCertain('hour') ? `${pad(c.get('hour') ?? 0)}:${pad(c.get('minute') ?? 0)}` : undefined;
+  const time = c.isCertain('hour')
+    ? `${pad(c.get('hour') ?? 0)}:${pad(c.get('minute') ?? 0)}`
+    : undefined;
   return { date, time };
 }
 

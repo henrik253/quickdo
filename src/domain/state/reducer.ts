@@ -3,6 +3,9 @@
  * Pure: never mutates its input; a failed precondition returns the input state unchanged plus a warning.
  */
 import { monotonicFactory } from 'ulid';
+import { blockEnd, busyFor } from '../plan/busy';
+import { nextFreeSlot } from '../plan/nextFreeSlot';
+import { addDays, hhmmToMin, minToHHMM, nowHHMM, padded, todayISO, toInstant } from '../time';
 import type {
   Action,
   CaptureTarget,
@@ -19,9 +22,6 @@ import type {
   Source,
   State,
 } from '../types';
-import { blockEnd, busyFor } from '../plan/busy';
-import { nextFreeSlot } from '../plan/nextFreeSlot';
-import { addDays, hhmmToMin, minToHHMM, nowHHMM, padded, todayISO, toInstant } from '../time';
 
 const nextUlid = monotonicFactory();
 
@@ -70,7 +70,11 @@ function ok(ctx: Ctx, item?: Item): ReduceResult {
   return { state: ctx.state, events: ctx.events, changed: true, item };
 }
 
-function emit(ctx: Ctx, type: HistoryType, fields: Omit<HistoryEvent, 'ts' | 'type' | 'day'> = {}): void {
+function emit(
+  ctx: Ctx,
+  type: HistoryType,
+  fields: Omit<HistoryEvent, 'ts' | 'type' | 'day'> = {},
+): void {
   ctx.events.push({ ts: ctx.now, type, day: ctx.today, ...fields });
 }
 
@@ -96,7 +100,9 @@ function backlogOrder(ctx: Ctx): number {
 
 /** Dated position: below every item on that day. */
 function datedOrder(ctx: Ctx, date: ISODate): number {
-  const orders = ctx.state.todos.items.filter((it) => it.scheduledFor === date).map((it) => it.order);
+  const orders = ctx.state.todos.items
+    .filter((it) => it.scheduledFor === date)
+    .map((it) => it.order);
   return (orders.length ? Math.max(...orders) : 0) + 1;
 }
 
@@ -142,7 +148,12 @@ function resolveOverlap(ctx: Ctx, item: Item): Item | undefined {
   const maxStart = hhmmToMin(dayBounds(ctx).dayEnd) - next.block.minutes;
   next.block.start = minToHHMM(Math.min(end, Math.max(0, maxStart)));
   touch(ctx, next);
-  emit(ctx, 'rescheduled', { itemId: next.id, from, to: next.block.start, scope: 'next_block_only' });
+  emit(ctx, 'rescheduled', {
+    itemId: next.id,
+    from,
+    to: next.block.start,
+    scope: 'next_block_only',
+  });
   return next;
 }
 
@@ -183,7 +194,12 @@ function baseItem(ctx: Ctx, title: string, source: Source): Item {
   };
 }
 
-function add(ctx: Ctx, parsed: ParsedCapture, source: Source, target?: CaptureTarget): ReduceResult {
+function add(
+  ctx: Ctx,
+  parsed: ParsedCapture,
+  source: Source,
+  target?: CaptureTarget,
+): ReduceResult {
   const title = parsed.title.trim();
   if (!title) return fail(ctx.state, 'no title');
   const item = baseItem(ctx, title, source);
@@ -230,7 +246,8 @@ function add(ctx: Ctx, parsed: ParsedCapture, source: Source, target?: CaptureTa
 function done(ctx: Ctx, id: string, by?: string): ReduceResult {
   const item = find(ctx, id);
   if (!item) return fail(ctx.state, 'not_found');
-  if (item.status !== 'open' && item.status !== 'skipped') return fail(ctx.state, `already ${item.status}`);
+  if (item.status !== 'open' && item.status !== 'skipped')
+    return fail(ctx.state, `already ${item.status}`);
   if (item.repeat === undefined) {
     item.status = 'done';
     item.completedAt = ctx.now;
@@ -255,7 +272,8 @@ function undo(ctx: Ctx, id: string): ReduceResult {
     emit(ctx, 'undone', { itemId: item.id });
     return ok(ctx, item);
   }
-  if (item.status !== 'done' && item.status !== 'skipped') return fail(ctx.state, `not done: ${item.status}`);
+  if (item.status !== 'done' && item.status !== 'skipped')
+    return fail(ctx.state, `not done: ${item.status}`);
   item.status = 'open';
   delete item.completedAt;
   delete item.skippedOn;
@@ -382,7 +400,11 @@ function nextSlot(ctx: Ctx, id: string): ReduceResult {
   return ok(ctx, item);
 }
 
-function applyPatch(item: Item, patch: EditablePatch, keys: ReadonlyArray<keyof EditablePatch>): string[] {
+function applyPatch(
+  item: Item,
+  patch: EditablePatch,
+  keys: ReadonlyArray<keyof EditablePatch>,
+): string[] {
   const changed: string[] = [];
   const src = patch as Record<string, unknown>;
   const dst = item as Record<string, unknown>;
@@ -546,15 +568,9 @@ function ingest(ctx: Ctx, command: InboxCommand, file: string): ReduceResult {
         item.source = { ...item.source, ref: patch.ref };
         changed.push('ref');
       }
-      const plain: Array<'title' | 'note' | 'due' | 'estimateMin' | 'project' | 'cue' | 'suggestedFor'> = [
-        'title',
-        'note',
-        'due',
-        'estimateMin',
-        'project',
-        'cue',
-        'suggestedFor',
-      ];
+      const plain: Array<
+        'title' | 'note' | 'due' | 'estimateMin' | 'project' | 'cue' | 'suggestedFor'
+      > = ['title', 'note', 'due', 'estimateMin', 'project', 'cue', 'suggestedFor'];
       for (const k of plain) {
         const v = patch[k];
         if (v === undefined || item[k] === v) continue;
@@ -584,7 +600,12 @@ function ingest(ctx: Ctx, command: InboxCommand, file: string): ReduceResult {
 
 // ---------- entry point ----------
 
-export function reduce(state: State, action: Action, clock: Clock, settings: Settings): ReduceResult {
+export function reduce(
+  state: State,
+  action: Action,
+  clock: Clock,
+  settings: Settings,
+): ReduceResult {
   const ctx: Ctx = {
     state: clone(state),
     clock,

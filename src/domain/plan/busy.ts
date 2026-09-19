@@ -1,5 +1,5 @@
-import type { Derived, ISODate, Item, State } from '../types';
 import { hhmmToMin, minToHHMM, weekdayOf } from '../time';
+import type { Derived, ISODate, Item, State } from '../types';
 
 export type BusyEntry = Derived['busy'][number];
 
@@ -18,23 +18,43 @@ export function blockedItemsOn(items: readonly Item[], date: ISODate): Item[] {
 }
 
 /** Anchors for the weekday of `date` plus the blocks of that day's items, sorted by start. */
-export function busyFor(state: State, date: ISODate, opts: { excludeId?: string } = {}): BusyEntry[] {
+export function busyFor(
+  state: State,
+  date: ISODate,
+  opts: { excludeId?: string } = {},
+): BusyEntry[] {
   const wd = weekdayOf(date);
   const out: BusyEntry[] = [];
   for (const a of state.schedule.anchors) {
-    if (a.days.includes(wd)) out.push({ start: a.start, end: a.end, kind: 'anchor', label: a.name });
+    if (a.days.includes(wd))
+      out.push({ start: a.start, end: a.end, kind: 'anchor', label: a.name });
   }
   for (const it of blockedItemsOn(state.todos.items, date)) {
     if (it.id === opts.excludeId || !it.block) continue;
-    out.push({ start: it.block.start, end: blockEnd(it.block), kind: 'block', label: it.title, id: it.id });
+    out.push({
+      start: it.block.start,
+      end: blockEnd(it.block),
+      kind: 'block',
+      label: it.title,
+      id: it.id,
+    });
   }
-  return out.sort((a, b) => hhmmToMin(a.start) - hhmmToMin(b.start) || a.kind.localeCompare(b.kind));
+  return out.sort(
+    (a, b) => hhmmToMin(a.start) - hhmmToMin(b.start) || a.kind.localeCompare(b.kind),
+  );
 }
 
 /** Total busy minutes inside [windowStart, windowEnd], overlapping intervals merged. */
-export function busyMinutesWithin(busy: readonly BusyEntry[], windowStart: number, windowEnd: number): number {
+export function busyMinutesWithin(
+  busy: readonly BusyEntry[],
+  windowStart: number,
+  windowEnd: number,
+): number {
   const clipped = busy
-    .map((b) => ({ s: Math.max(hhmmToMin(b.start), windowStart), e: Math.min(hhmmToMin(b.end), windowEnd) }))
+    .map((b) => ({
+      s: Math.max(hhmmToMin(b.start), windowStart),
+      e: Math.min(hhmmToMin(b.end), windowEnd),
+    }))
     .filter((b) => b.e > b.s)
     .sort((a, b) => a.s - b.s);
   let total = 0;

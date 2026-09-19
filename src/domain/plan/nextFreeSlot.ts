@@ -1,5 +1,5 @@
-import type { HHMM } from '../types';
 import { ceil5, hhmmToMin, minToHHMM } from '../time';
+import type { HHMM } from '../types';
 
 export interface Interval {
   start: HHMM;

@@ -1,6 +1,9 @@
 /**
  * The derived read model (docs/CONTRACTS.md §1 derive rules). Pure and never stored.
  */
+
+import { blockEnd, busyFor, busyMinutesWithin } from '../plan/busy';
+import { addDays, dateOf, hhmmToMin, nowHHMM, padded, todayISO, weekdayOf } from '../time';
 import type {
   Clock,
   Derived,
@@ -13,8 +16,6 @@ import type {
   State,
   Weekday,
 } from '../types';
-import { blockEnd, busyFor, busyMinutesWithin } from '../plan/busy';
-import { addDays, dateOf, hhmmToMin, nowHHMM, padded, todayISO, weekdayOf } from '../time';
 
 const WEEKEND: readonly Weekday[] = ['sat', 'sun'];
 
@@ -43,7 +44,11 @@ function habitView(item: Item, date: ISODate, doneDays: Set<string>, tz: string)
   let due7 = 0;
   let done7 = 0;
   // the last 7 due days before today, not earlier than the habit exists
-  for (let d = yesterday, guard = 0; due7 < 7 && guard < 70 && d >= created; d = addDays(d, -1), guard++) {
+  for (
+    let d = yesterday, guard = 0;
+    due7 < 7 && guard < 70 && d >= created;
+    d = addDays(d, -1), guard++
+  ) {
     if (!repeatDueOn(repeat, d)) continue;
     due7 += 1;
     if (doneDays.has(d)) done7 += 1;
@@ -105,13 +110,20 @@ export function derive(
     .map((it) => habitView(it, date, doneDaysByItem.get(it.id) ?? new Set(), tz));
 
   const backlog = items
-    .filter((it) => it.status === 'open' && it.scheduledFor === undefined && it.repeat === undefined)
+    .filter(
+      (it) => it.status === 'open' && it.scheduledFor === undefined && it.repeat === undefined,
+    )
     .sort(byOrder);
 
   const horizon = addDays(date, 7);
   const groups = new Map<string, Item[]>();
   for (const it of items) {
-    if (it.status !== 'open' || it.repeat !== undefined || !it.scheduledFor || it.scheduledFor <= date) {
+    if (
+      it.status !== 'open' ||
+      it.repeat !== undefined ||
+      !it.scheduledFor ||
+      it.scheduledFor <= date
+    ) {
       continue;
     }
     const key = it.scheduledFor <= horizon ? it.scheduledFor : 'later';
@@ -176,7 +188,8 @@ export function derive(
     const startMin = hhmmToMin(it.block.start);
     const endMin = hhmmToMin(blockEnd(it.block));
     const masked = state.day.freshStartAt !== null && startMin < freshMin;
-    if (!it.startedAt && startMin + grace < nowMin && !masked) slips.push({ id: it.id, kind: 'notStarted' });
+    if (!it.startedAt && startMin + grace < nowMin && !masked)
+      slips.push({ id: it.id, kind: 'notStarted' });
     else if (it.startedAt && endMin + grace < nowMin) slips.push({ id: it.id, kind: 'overran' });
   }
 

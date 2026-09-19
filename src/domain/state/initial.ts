@@ -1,5 +1,5 @@
-import type { Clock, DayState, Schedule, Settings, State, TodosFile } from '../types';
 import { todayISO, toInstant } from '../time';
+import type { Clock, DayState, Schedule, Settings, State, TodosFile } from '../types';
 
 export function emptyTodos(clock: Clock): TodosFile {
   return { version: 1, updatedAt: toInstant(clock), items: [] };
