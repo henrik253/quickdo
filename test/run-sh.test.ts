@@ -3,7 +3,7 @@
  * No network: the fixture has no `origin`, so the pull step is skipped best-effort.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -24,7 +24,7 @@ function fixture(opts: { webOk: boolean; serverExit?: number }) {
   mkdirSync(join(checkout, 'node_modules'), { recursive: true });
   // run.sh cds to $(dirname "$0")/.. so it must live in <checkout>/bin
   writeFileSync(join(checkout, 'bin', 'run.sh'), readFileSync(RUN_SH));
-  const serverJs = `process.stdout.write('server ' + process.env.QUICKDO_FIXTURE_TAG); process.exit(${opts.serverExit ?? 0});`;
+  const serverJs = `process.stdout.write('server ' + process.env.QUICKDO_FIXTURE_TAG + ' build=' + (process.env.QUICKDO_BUILD_SHA || 'none')); process.exit(${opts.serverExit ?? 0});`;
   writeFileSync(
     join(checkout, 'package.json'),
     JSON.stringify({
@@ -95,11 +95,27 @@ describe('bin/run.sh', () => {
     expect(readFileSync(join(checkout, 'dist.prev', 'server.js'), 'utf8')).toContain('old server');
     expect(existsSync(join(checkout, 'dist.next'))).toBe(false);
     expect(readFileSync(join(state, 'built-sha'), 'utf8').trim()).toBe(head);
+    // the server learns which commit it was built from (not git HEAD)
+    expect(first.stdout).toContain(`build=${head}`);
 
     const second = run(checkout, state, 'two');
     expect(second.status).toBe(0);
     expect(second.stdout).not.toContain('build ok');
     expect(second.stdout).toContain('server two');
+    expect(second.stdout).toContain(`build=${head}`);
+  });
+
+  it('[F-024] a missing node_modules triggers npm ci, which is retried once from scratch; on failure the old server still starts', () => {
+    const { checkout, state } = fixture({ webOk: true });
+    rmSync(join(checkout, 'node_modules'), { recursive: true, force: true }); // no lockfile in the fixture → npm ci fails
+    mkdirSync(join(checkout, 'dist'), { recursive: true });
+    writeFileSync(join(checkout, 'dist', 'server.js'), "process.stdout.write('old server')");
+    const r = run(checkout, state, 'x');
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('npm ci failed; retrying once');
+    expect(r.stderr).toContain('npm ci failed twice; keeping the previous build');
+    expect(r.stdout).toContain('old server');
+    expect(existsSync(join(state, 'built-sha'))).toBe(false);
   });
 
   it('[F-024] the server exit code is passed through (75 = restart me, handled by launchd KeepAlive)', () => {

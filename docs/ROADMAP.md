@@ -134,6 +134,13 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 
 ## Implementation notes
 
+- 2026-09-19 (v0.2 deploy incident): the first self-update pulled the new commit but `npm ci` failed twice with
+  `ENOTEMPTY … node_modules/date-fns` (npm 10 deleting an existing `node_modules`), so `run.sh` correctly kept the old
+  build — but `/api/version` reported git HEAD and the update check compared `stable` against HEAD, so the app looked
+  current and would never have retried. Fixes: `run.sh` now removes `node_modules` before `npm ci` and retries once from
+  scratch; it exports `QUICKDO_BUILD_SHA` from `built-sha` so `/api/version` and `update.ts` use the sha the running
+  build was made from. Production was repaired by hand (`rm -rf node_modules && npm ci && npm run build`).
+
 - 2026-09-19: build organisation — modules built in parallel git worktrees (`../quickdo-wt/<module>`) against
   `docs/CONTRACTS.md`; branches `domain` and `ops` merged into `main` first, then `server`, `sync`, `web`, `domain-tests`.
 

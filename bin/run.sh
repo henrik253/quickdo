@@ -79,9 +79,16 @@ if [ ! -f dist/server.js ] || [ "$head_sha" != "$built_sha" ] || [ "${QUICKDO_FO
   build_ok=1
   if [ "$need_ci" = "1" ]; then
     log "package-lock.json changed, running npm ci"
+    # npm 10 sometimes fails with ENOTEMPTY while deleting an existing node_modules; remove it first,
+    # and retry once from scratch if the first attempt still fails.
+    rm -rf node_modules
     if ! npm ci --no-audit --no-fund; then
-      warn "npm ci failed"
-      build_ok=0
+      warn "npm ci failed; retrying once from a clean node_modules"
+      rm -rf node_modules
+      if ! npm ci --no-audit --no-fund; then
+        warn "npm ci failed twice; keeping the previous build"
+        build_ok=0
+      fi
     fi
   fi
   if [ "$build_ok" = "1" ]; then
@@ -106,5 +113,9 @@ if [ ! -f dist/server.js ]; then
 fi
 
 # ---- 5. run --------------------------------------------------------------------------------
-log "starting $NODE $CHECKOUT/dist/server.js"
+# Tell the server which commit the running build came from (git HEAD may already be newer when a
+# build failed); /api/version reports it and the update check compares origin/stable against it.
+built_now="$(cat "$BUILT_SHA_FILE" 2>/dev/null || echo "")"
+if [ -n "$built_now" ]; then export QUICKDO_BUILD_SHA="$built_now"; fi
+log "starting $NODE $CHECKOUT/dist/server.js (build ${built_now:0:7})"
 exec "$NODE" dist/server.js

@@ -1,5 +1,6 @@
 /**
- * Self-update check: every 30 min compare `origin/stable` with the running git sha. When it moved
+ * Self-update check: every 30 min compare `origin/stable` with the sha the running build came from
+ * (QUICKDO_BUILD_SHA from bin/run.sh, else git HEAD). When it moved
  * and the user has been idle for 2 min, exit with code 75 ("restart me": bin/run.sh rebuilds and
  * launchd restarts). Otherwise announce it once over SSE (`update` { sha }). Silent on failure.
  */
@@ -13,6 +14,7 @@ export const IDLE_MS = 2 * 60 * 1000;
 export const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
 export interface UpdateCheckerOptions {
+  /** The commit the running build was made from (falls back to git HEAD in index.ts). */
   gitSha: string | null;
   enabled: boolean;
   cwd: string;

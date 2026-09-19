@@ -123,7 +123,7 @@ async function main(): Promise<void> {
   sync?.start();
 
   const updater = startUpdateChecker({
-    gitSha,
+    gitSha: version.buildSha === 'dev' ? gitSha : version.buildSha,
     enabled: config.syncEnabled,
     cwd: process.cwd(),
     lastMutationAt: () => store.lastMutationAt(),
