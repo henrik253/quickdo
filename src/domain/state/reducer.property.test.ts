@@ -618,7 +618,7 @@ describe('reducer: zero estimates create zero-minute blocks (known gap)', () => 
   // padded(0) is 0, so every path that sizes a block from the estimate (add with a slot,
   // setBlock/nextSlot without explicit minutes) writes block.minutes = 0, which the schema
   // rejects (min 5). Flip to plain `it` once the reducer floors the block length at 5 minutes.
-  it.fails('[F-006] add with a slot and estimateMin 0 yields a schema-valid block', () => {
+  it('[F-006] add with a slot and estimateMin 0 yields a schema-valid block', () => {
     const parsed: ParsedCapture = {
       title: 'Read paper X',
       estimateMin: 0,
@@ -637,7 +637,7 @@ describe('reducer: zero estimates create zero-minute blocks (known gap)', () => 
     expect(() => parseTodosFile(r.state.todos)).not.toThrow();
   });
 
-  it.fails('[F-009] setBlock without minutes on an item with estimateMin 0 yields a schema-valid block', () => {
+  it('[F-009] setBlock without minutes on an item with estimateMin 0 yields a schema-valid block', () => {
     const state = stateWith([item({ id: 'a', scheduledFor: TODAY, estimateMin: 0 })]);
     const r = reduce(
       state,
@@ -652,7 +652,7 @@ describe('reducer: zero estimates create zero-minute blocks (known gap)', () => 
 describe('reducer: edit with undefined required fields (known gap)', () => {
   // applyPatch deletes any key whose patch value is `undefined`, including the required ones.
   // These flip to failing once the reducer guards `title`/`tags`/`order` — then drop `.fails`.
-  it.fails('[F-001] edit { title: undefined } must not throw', () => {
+  it('[F-001] edit { title: undefined } must not throw', () => {
     const state = stateWith([item({ id: 'a' })]);
     expect(() =>
       reduce(
@@ -664,7 +664,7 @@ describe('reducer: edit with undefined required fields (known gap)', () => {
     ).not.toThrow();
   });
 
-  it.fails('[F-001] edit { tags: undefined } keeps the item schema-valid', () => {
+  it('[F-001] edit { tags: undefined } keeps the item schema-valid', () => {
     const state = stateWith([item({ id: 'a' })]);
     const r = reduce(
       state,

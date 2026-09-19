@@ -47,6 +47,8 @@ const EDITABLE_KEYS: ReadonlyArray<keyof EditablePatch> = [
 ];
 
 const INGEST_GUARDED = new Set(['title', 'note', 'cue', 'due', 'estimateMin']);
+const REQUIRED_KEYS = new Set<string>(['title', 'tags', 'order']);
+const MIN_BLOCK_MINUTES = 5;
 
 interface Ctx {
   state: State; // the working copy — safe to mutate
@@ -158,6 +160,7 @@ function resolveOverlap(ctx: Ctx, item: Item): Item | undefined {
 }
 
 function setBlockOn(ctx: Ctx, item: Item, start: string, minutes: number): void {
+  minutes = Math.max(MIN_BLOCK_MINUTES, minutes);
   item.block = { start, minutes };
   if (minutes >= 60 && item.checkpoint === undefined) {
     const mid = hhmmToMin(start) + minutes / 2;
@@ -229,7 +232,7 @@ function add(
   }
   let detail: string | undefined;
   if (wantsSlot && item.scheduledFor && !item.block) {
-    const minutes = padded(item.estimateMin, ctx.settings);
+    const minutes = Math.max(MIN_BLOCK_MINUTES, padded(item.estimateMin, ctx.settings));
     const slot = findSlot(ctx, item.scheduledFor, minutes);
     if (slot) setBlockOn(ctx, item, slot, minutes);
     else detail = 'no free slot';
@@ -388,7 +391,10 @@ function nextSlot(ctx: Ctx, id: string): ReduceResult {
   if (!item) return fail(ctx.state, 'not_found');
   if (!item.block && item.scheduledFor !== ctx.today) return fail(ctx.state, 'not on Today');
   const date = item.scheduledFor ?? ctx.today;
-  const minutes = item.block?.minutes ?? padded(item.estimateMin, ctx.settings);
+  const minutes = Math.max(
+    MIN_BLOCK_MINUTES,
+    item.block?.minutes ?? padded(item.estimateMin, ctx.settings),
+  );
   const slot = findSlot(ctx, date, minutes, item.id);
   if (!slot) return fail(ctx.state, 'no free slot');
   const from = item.block?.start ?? null;
@@ -412,6 +418,7 @@ function applyPatch(
     if (!Object.hasOwn(src, key)) continue;
     const value = src[key];
     if (value === undefined) {
+      if (REQUIRED_KEYS.has(key)) continue; // title/tags/order can never be removed
       if (Object.hasOwn(dst, key)) {
         delete dst[key];
         changed.push(key);

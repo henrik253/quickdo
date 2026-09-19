@@ -5,31 +5,31 @@ A feature is `done` only when every listed test exists, is not skipped, and CI i
 
 | id | title | status | practice | tests | manual |
 |---|---|---|---|---|---|
-| F-001 | Capture bar (focused on open, Enter appends, row flashes, draft kept on failure) | ⬜ planned | capture everything (Allen 2001) | — | — |
-| F-002 | Quick syntax with live chips | ⬜ planned | concrete plans remove intrusion (Masicampo & Baumeister 2011) | — | — |
-| F-003 | Capture from anywhere (Shortcut hotkey + CLI hit POST /api/capture) | ⬜ planned | capture in seconds | — | Press ⌃⌥Space after a reboot, type a todo, see the notification |
-| F-004 | Backlog vs Today plus morning rollover | ⬜ planned | separate master list from daily commitment; plan only the next step | — | — |
-| F-005 | Tiny Today, soft cap (amber header from item 6) | ⬜ planned | 3–5 item daily list | — | — |
-| F-006 | Padded estimates shown everywhere | ⬜ planned | planning fallacy (Buehler, Griffin & Ross 1994) | — | — |
-| F-007 | If-then cue (block counts as cue; `c` or evening ritual sets it; never prompted on the fast path) | ⬜ planned | implementation intentions (Gollwitzer & Sheeran 2006) | — | — |
-| F-008 | Progress bar with one segment per committed Today item | ⬜ planned | progress principle (Amabile & Kramer 2011) | — | — |
-| F-009 | Time blocks and the day timeline | ⬜ planned | time-blocking beats lists | — | — |
-| F-010 | Capacity meter (amber at 90 %, red over 100 %) | ⬜ planned | a calendar has capacity, a list does not; 1–2 h slack | — | — |
-| F-011 | Checkpoints on blocks ≥ 60 min | ⬜ planned | intermediate deadlines (Ariely & Wertenbroch 2002) | — | — |
-| F-012 | Anchors and slack band | ⬜ planned | fixed anchors, flexible content (Polivy & Herman) | — | — |
-| F-013 | Slip banner; only the next block ever moves | ⬜ planned | slip recovery (Polivy & Herman) | — | — |
-| F-014 | Self-forgiveness copy, no failure counters | ⬜ planned | Wohl, Pychyl & Bennett 2010; Sirois 2014 | — | — |
-| F-015 | Fresh start (`.`) leaves future blocks alone | ⬜ planned | fresh-start effect (Dai, Milkman & Riis 2014) | — | — |
-| F-016 | Pre-planned fallback (derived 15 min at 16:00) | ⬜ planned | pre-planned fallback; behavioural activation | — | — |
-| F-017 | Two-minute start (`2`) | ⬜ planned | behavioural activation | — | — |
-| F-018 | Habits strip with never-miss-twice (no streak counter) | ⬜ planned | Lally et al. 2010 | — | — |
-| F-019 | Evening ritual (pick 2–3 for tomorrow with cues) | ⬜ planned | evening if-then planning | — | — |
-| F-020 | Sunday review (drop after 3 reschedules) | ⬜ planned | weekly review | — | — |
-| F-021 | Tips with sources, rotating and contextual | ⬜ planned | tips with sources | — | — |
-| F-022 | Agent transparency (sync badge, toast, suggestion chip, source link) | ⬜ planned | trust in the agent channel | — | — |
+| F-001 | Capture bar (focused on open, Enter appends, row flashes, draft kept on failure) | ✅ done | capture everything (Allen 2001) | `e2e/capture.spec.ts#[F-001] page opens with the bar focused; Enter adds a row within 500 ms; it is on disk and survives a reload`<br>`src/web/components/CaptureBar.test.tsx#[F-001] the bar is focused on mount` | — |
+| F-002 | Quick syntax with live chips | ✅ done | concrete plans remove intrusion (Masicampo & Baumeister 2011) | `src/web/components/CaptureBar.test.tsx#[F-002] a warning becomes an amber chip`<br>`test/server/api.capture.test.ts#[F-002] returns the parsed tokens (chips) and applies them to the item` | — |
+| F-003 | Capture from anywhere (Shortcut hotkey + CLI hit POST /api/capture) | ✅ done | capture in seconds | `e2e/capture.spec.ts#[F-003] a capture posted from outside appears via SSE without a reload`<br>`src/web/store.test.ts#[F-003] an SSE state event replaces the whole state and marks the stream connected` | Press ⌃⌥Space after a reboot, type a todo, see the notification |
+| F-004 | Backlog vs Today plus morning rollover | ✅ done | separate master list from daily commitment; plan only the next step | `e2e/today.spec.ts#[F-004] moving the clock to the next day rolls open Today items to the Backlog with a chip`<br>`src/web/components/CaptureBar.test.tsx#[F-004] ⌘Enter posts with target today` | — |
+| F-005 | Tiny Today, soft cap (amber header from item 6) | ✅ done | 3–5 item daily list | `e2e/today.spec.ts#[F-005] six items on Today turn the header amber and offer T`<br>`src/web/components/TodayList.test.tsx#[F-005] the header turns amber from item 6 and offers T` | — |
+| F-006 | Padded estimates shown everywhere | ✅ done | planning fallacy (Buehler, Griffin & Ross 1994) | `src/web/components/TodayList.test.tsx#[F-006] rows show the padded estimate and block chips`<br>`src/domain/capture/parseCapture.test.ts#[F-006] block minutes use the padded estimate (default 30 → 40)` | — |
+| F-007 | If-then cue (block counts as cue; `c` or evening ritual sets it; never prompted on the fast path) | 🛠 in-progress | implementation intentions (Gollwitzer & Sheeran 2006) | `src/web/components/TodayList.test.tsx#[F-007] e opens an inline title editor; Enter PATCHes the title, Esc cancels`<br>`test/server/api.items.test.ts#[F-007] applies an editable patch (cue, estimate) and reports the change in history` | — |
+| F-008 | Progress bar with one segment per committed Today item | ✅ done | progress principle (Amabile & Kramer 2011) | `e2e/today.spec.ts#[F-008] x on a row updates the progress label and moves the row to the done section`<br>`src/web/components/ProgressBar.test.tsx#[F-008] renders one segment per committed Today item with its status` | — |
+| F-009 | Time blocks and the day timeline | ✅ done | time-blocking beats lists | `src/web/components/TodayList.test.tsx#[F-009] [ and ] shift the block by 15 min through PATCH`<br>`src/web/focus.test.ts#[F-009] inline editors, block shifts, fresh start, view toggle, help` | — |
+| F-010 | Capacity meter (amber at 90 %, red over 100 %) | ✅ done | a calendar has capacity, a list does not; 1–2 h slack | `src/domain/plan/nextFreeSlot.test.ts#[F-010] returns null when the block does not fit before the day end`<br>`src/domain/state/derive.test.ts#[F-010] an empty day: free = dayEnd − now, only slack is used, level ok` | — |
+| F-011 | Checkpoints on blocks ≥ 60 min | 🛠 in-progress | intermediate deadlines (Ariely & Wertenbroch 2002) | — | — |
+| F-012 | Anchors and slack band | 🛠 in-progress | fixed anchors, flexible content (Polivy & Herman) | `test/server/state.boot.test.ts#[F-012] falls back to the default schedule when schedule.json is invalid`<br>`src/domain/plan/nextFreeSlot.test.ts#[F-012] skips anchors and blocks and lands right after the clash` | — |
+| F-013 | Slip banner; only the next block ever moves | ✅ done | slip recovery (Polivy & Herman) | `src/web/components/SlipBanner.test.tsx#[F-013] the not-started banner offers 2 o n f T s and dispatches the matching actions`<br>`test/server/api.items.test.ts#[F-013] next moves the block to the next free slot` | — |
+| F-014 | Self-forgiveness copy, no failure counters | ✅ done | Wohl, Pychyl & Bennett 2010; Sirois 2014 | `src/web/components/TodayList.test.tsx#[F-014] s skips with the self-forgiveness copy and POSTs skip`<br>`src/web/store.test.ts#[F-014] skip shows the self-forgiveness copy and never a failure counter` | — |
+| F-015 | Fresh start (`.`) leaves future blocks alone | ✅ done | fresh-start effect (Dai, Milkman & Riis 2014) | `src/web/components/TodayList.test.tsx#[F-015] . posts a fresh start`<br>`test/server/api.day.test.ts#[F-015] sets freshStartAt, drops past-due blocks and leaves future blocks alone` | — |
+| F-016 | Pre-planned fallback (derived 15 min at 16:00) | 🛠 in-progress | pre-planned fallback; behavioural activation | — | — |
+| F-017 | Two-minute start (`2`) | 🛠 in-progress | behavioural activation | `test/server/api.items.test.ts#[F-017] start records startedAt for a Today item and refuses a Backlog item with 409`<br>`src/domain/state/reducer.test.ts#[F-017] start records startedAt and history only for items on Today` | — |
+| F-018 | Habits strip with never-miss-twice (no streak counter) | ✅ done | Lally et al. 2010 | `test/server/state.boot.test.ts#[F-018] loads this month and last month of history so habits know doneToday`<br>`src/domain/state/derive.test.ts#[F-018] repeatDueOn follows the weekday of the date` | — |
+| F-019 | Evening ritual (pick 2–3 for tomorrow with cues) | 🛠 in-progress | evening if-then planning | `test/server/api.day.test.ts#[F-019] moves the picked items to tomorrow with their cues and marks the ritual done`<br>`src/domain/state/reducer.test.ts#[F-019] commitEvening moves the picked items to tomorrow with their cues and closes the ritual` | — |
+| F-020 | Sunday review (drop after 3 reschedules) | 🛠 in-progress | weekly review | `src/domain/state/reducer.test.ts#[F-020] drop works on open and skipped items, never on done ones` | — |
+| F-021 | Tips with sources, rotating and contextual | ✅ done | tips with sources | `src/web/components/TipBar.test.tsx#[F-021] every tip has text, a practice, a source and a known group; at least 20 tips`<br>`src/web/focus.test.ts#[F-021] help open: ? or Esc closes it, everything else is swallowed` | — |
+| F-022 | Agent transparency (sync badge, toast, suggestion chip, source link) | ✅ done | trust in the agent channel | `src/web/focus.test.ts#[F-022] g chords: g s syncs, g e ritual, g r review, anything else cancels`<br>`test/server/api.items.test.ts#[F-022] accept applies an agent suggestion` | — |
 | F-023 | Reminders (notification at block start, checkpoint, fallback) | ⬜ planned | cues fire at the time (Gollwitzer) | — | — |
-| F-024 | Dock app and self-refresh (PWA install, launchd, update to `stable`) | ⬜ planned | an application that refreshes itself | — | Chrome menu → Install Quickdo → icon appears in the Dock<br>Reboot, log in, open the Dock app → todos are there |
-| F-025 | Upcoming view (next 7 days + later) | ⬜ planned | a schedule of things I want to do | — | — |
-| F-026 | Agent sync over GitHub (inbox ingest, rejected feedback, conflict-free) | ⬜ planned | agent channel (docs/PLAN.md §6) | — | — |
+| F-024 | Dock app and self-refresh (PWA install, launchd, update to `stable`) | 🛠 in-progress | an application that refreshes itself | `e2e/pwa.spec.ts#[F-024] the manifest is served with icons and display standalone`<br>`test/server/config.test.ts#[F-024] applies the defaults under QUICKDO_HOME when no config.json exists` | Chrome menu → Install Quickdo → icon appears in the Dock<br>Reboot, log in, open the Dock app → todos are there |
+| F-025 | Upcoming view (next 7 days + later) | ✅ done | a schedule of things I want to do | `src/web/components/CaptureBar.test.tsx#[F-025] a leading ? filters instead of capturing`<br>`src/web/store.test.ts#[F-025] visibleRows orders Today, done, habits, then the view; ? filters only the lower list` | — |
+| F-026 | Agent sync over GitHub (inbox ingest, rejected feedback, conflict-free) | ✅ done | agent channel (docs/PLAN.md §6) | `test/server/sync.git.test.ts#[F-026] ingests a pushed inbox command, removes the file and pushes the result`<br>`test/server/sync.inbox.test.ts#[F-026] bad inbox files are rejected with an error file while valid siblings are ingested` | — |
 
-0 of 26 features done.
+17 of 26 features done.
