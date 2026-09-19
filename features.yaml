@@ -121,7 +121,7 @@
   practice: Lally et al. 2010
   status: done
   tests:
-  - test/server/state.boot.test.ts#[F-018] loads this month and last month of history so habits know doneToday
+  - test/server/state.boot.test.ts#[F-018] loads the last four months of history so habits and the done tracker know past days
   - src/domain/state/derive.test.ts#[F-018] repeatDueOn follows the weekday of the date
 - id: F-019
   title: Evening ritual (pick 2–3 for tomorrow with cues)
