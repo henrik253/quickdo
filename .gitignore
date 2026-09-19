@@ -15,3 +15,4 @@ tokens/
 *.ics
 *.local.json
 .vite/
+!.env.example

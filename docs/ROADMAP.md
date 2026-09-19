@@ -7,12 +7,33 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 
 ## Status summary (2026-09-19)
 
-- **v0.1 prototype built 2026-09-19** (M0a + M0b + M1 + M2-lite): 310 unit/integration tests + 8 Playwright e2e tests green,
-  `npm run check` clean. `features.yaml`: 17 done, 8 in progress, 1 planned (see `docs/ACCEPTANCE.md`).
+- **v0.1 prototype built 2026-09-19** (M0a + M0b + M1 + M2-lite), installed on Henrik's Mac; **v0.2 the same evening**
+  adds LLM formatting of captures (Haiku), a ✕ remove button, and removes the calendar view. `npm run check` clean;
+  see `docs/ACCEPTANCE.md` for the feature table.
 - Repos: `henrik253/quickdo` (public, code) and `henrik253/quickdo-data` (private, data) created 2026-09-19; the agent
   contract (`README.md`) and `schema/*.schema.json` are published in the data repo.
 - Installed on this Mac as a launchd agent and verified end to end (CLI capture → push; Hermes inbox → ingest). CI green,
   `release` job moves `stable`. Next: Chrome install (Henrik), Hermes PAT, then M2 (ICS) and M3.
+
+## v0.2 — Henrik's first feedback (2026-09-19, same day)
+
+- [x] **LLM formatting of captures** (F-028): every capture from the UI, hotkey or CLI is stored immediately as typed,
+      then a background call to Claude Haiku (`claude-haiku-4-5`, `client.messages.parse` with a zod output format)
+      rewrites it into a clean todo: verb-first title, details into `note`, `due` for stated deadlines ("until Friday"),
+      `scheduledFor` only when the user says when they will do it, estimate/project/tags/cue only when obvious.
+      Parser-extracted fields always win; a user edit that lands before the model answers wins too (result `skipped`);
+      failures leave the item as typed (`failed`). The raw text is kept in `item.llm.raw`. UI shows a "✨ formatting…"
+      chip while pending. Code: `src/server/llm/format.ts`, wiring in `app.ts` (`runFormat`), tests in
+      `test/server/llm.format.test.ts` with a fake formatter (no network in tests).
+- [x] **`.env` for the Anthropic key** (`.env.example` committed, `.env` git-ignored): `config.ts` reads
+      `<checkout>/.env` (real environment wins), `ANTHROPIC_API_KEY`, `QUICKDO_LLM_MODEL`, `QUICKDO_LLM=off`. The key is
+      re-read on every capture, so adding it later needs no restart. Never logged, never in API responses.
+      `[ ]` Henrik: paste the key into `~/quickdo/.env`.
+- [x] **Remove button** (F-027): a ✕ at the end of every open row (Today, Backlog, Upcoming, habits) drops the item
+      (same as `d`); faint until hover / cursor.
+- [x] **Calendar view removed** at Henrik's request: `Timeline.tsx` deleted, single-column layout. Capacity is still
+      computed (the tips use it); anchors/blocks still work via `@`, `[`, `]`, `+`. F-010 back to planned, F-009/F-012
+      re-titled in `features.yaml`.
 
 ## M0a — Capture works in the browser
 
@@ -90,10 +111,11 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 ## M2 — Time has a shape (v0.1 ships the "lite" subset)
 
 - [x] `schedule.json` anchors + `GET/PUT /api/schedule` (edit the file or PUT; no CLI `anchor add|rm` yet).
-- [x] `@` blocks, `Timeline`, capacity meter, soft Today cap, `Upcoming` + `p`, `[` `]` `+`, checkpoint auto-set at the
-      midpoint of blocks ≥ 60 min (no reminder fires yet — M3).
+- [x] `@` blocks, soft Today cap, `Upcoming` + `p`, `[` `]` `+`, checkpoint auto-set at the midpoint of blocks ≥ 60 min
+      (no reminder fires yet — M3). The `Timeline` and the capacity meter shipped in v0.1 and were removed in v0.2.
 - [ ] CLI `quickdo anchor add|rm`.
-- [ ] ICS read for Google + Outlook (Phase A) — **after v0.1**.
+- [ ] ICS read for Google + Outlook (Phase A) — on hold: the calendar view was removed in v0.2; revisit only if Henrik
+      wants calendar data back (e.g. as capacity input without a visual timeline).
 
 ## M3 — Slips, cues, rituals, reminders
 

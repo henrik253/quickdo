@@ -7,7 +7,6 @@ import { KeyHelp } from './components/KeyHelp';
 import { ProgressBar } from './components/ProgressBar';
 import { StartingBanner } from './components/StartingBanner';
 import { SyncBadge } from './components/SyncBadge';
-import { Timeline } from './components/Timeline';
 import { TipBar } from './components/TipBar';
 import { Toast } from './components/Toast';
 import { TodayList } from './components/TodayList';
@@ -152,9 +151,6 @@ export function App() {
           <HabitsStrip />
           {view === 'backlog' ? <Backlog /> : <Upcoming />}
         </div>
-        <aside className="col-side">
-          {state && <Timeline derived={state.derived} schedule={state.schedule} />}
-        </aside>
       </div>
       {state && (
         <TipBar context={{ slips: state.derived.slips.length, overCap: state.derived.overCap }} />

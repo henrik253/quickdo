@@ -180,6 +180,37 @@
             "type": "string",
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
           },
+          "llm": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "done",
+                  "failed",
+                  "skipped"
+                ]
+              },
+              "raw": {
+                "type": "string",
+                "maxLength": 5000
+              },
+              "at": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
+              },
+              "model": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "status",
+              "raw"
+            ],
+            "additionalProperties": false
+          },
           "startedAt": {
             "type": "string",
             "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"

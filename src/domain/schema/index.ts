@@ -58,6 +58,13 @@ export const SourceSchema = z.object({
   dedupeKey: z.string().max(200).optional(),
 });
 
+export const LlmFormatSchema = z.object({
+  status: z.enum(['pending', 'done', 'failed', 'skipped']),
+  raw: z.string().max(5000),
+  at: ISOInstant.optional(),
+  model: z.string().max(100).optional(),
+});
+
 export const ItemSchema = z
   .object({
     id: z.string().min(1),
@@ -80,6 +87,7 @@ export const ItemSchema = z
     source: SourceSchema,
     createdAt: ISOInstant,
     updatedAt: ISOInstant,
+    llm: LlmFormatSchema.optional(),
     startedAt: ISOInstant.optional(),
     completedAt: ISOInstant.optional(),
     skippedOn: ISODate.optional(),

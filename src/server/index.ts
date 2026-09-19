@@ -13,7 +13,8 @@ import pkg from '../../package.json';
 import { createApp } from './app';
 import { createBroadcaster } from './broadcast';
 import { createClock } from './clock';
-import { loadConfig } from './config';
+import { llmApiKey, loadConfig } from './config';
+import { createAnthropicFormatter } from './llm/format';
 import { createLogger } from './log';
 import { createStore } from './state';
 import { createSync, type Sync } from './sync';
@@ -72,11 +73,29 @@ async function main(): Promise<void> {
     log('info', 'git sync disabled (QUICKDO_SYNC=off)');
   }
 
+  let formatter: ReturnType<typeof createAnthropicFormatter> | undefined;
+  if (config.llm.enabled) {
+    formatter = createAnthropicFormatter({
+      model: config.llm.model,
+      getApiKey: () => llmApiKey(config.llm.envFile),
+    });
+    log(
+      'info',
+      formatter.available()
+        ? 'llm formatting enabled'
+        : 'llm formatting off until ANTHROPIC_API_KEY is set in .env (no restart needed)',
+      { model: config.llm.model, envFile: config.llm.envFile },
+    );
+  } else {
+    log('info', 'llm formatting disabled (QUICKDO_LLM=off)');
+  }
+
   const webDir = findWebDir();
   if (!webDir) log('warn', 'dist/web missing; serving the placeholder page');
 
   const app = createApp({
     store,
+    formatter,
     clock,
     settings: config.settings,
     port: config.port,

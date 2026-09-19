@@ -7,11 +7,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Hono } from 'hono';
 import { emptyTodos } from '../../src/domain/state/initial';
-import { DEFAULT_SETTINGS, type Item, type TodosFile } from '../../src/domain/types';
+import {
+  DEFAULT_SETTINGS,
+  type Item,
+  type LlmFormat,
+  type TodosFile,
+} from '../../src/domain/types';
 import { createApp } from '../../src/server/app';
 import { type Broadcaster, createBroadcaster } from '../../src/server/broadcast';
 import { createClock, type ServerClock } from '../../src/server/clock';
 import { loadConfig } from '../../src/server/config';
+import type { Formatter } from '../../src/server/llm/format';
 import { silentLogger } from '../../src/server/log';
 import { createStore, type StateResponse, type Store } from '../../src/server/state';
 
@@ -52,6 +58,8 @@ export interface SandboxOptions {
   schedule?: string;
   /** Skip `store.load()` (to drive boot by hand). */
   noLoad?: boolean;
+  formatter?: Formatter;
+  onFormatSettled?: (id: string, status: LlmFormat['status']) => void;
 }
 
 export function tempHome(): string {
@@ -100,6 +108,8 @@ export async function makeSandbox(opts: SandboxOptions = {}): Promise<Sandbox> {
 
   const app = createApp({
     store,
+    formatter: opts.formatter,
+    onFormatSettled: opts.onFormatSettled,
     clock,
     settings: config.settings,
     port: config.port,

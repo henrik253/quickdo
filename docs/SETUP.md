@@ -31,6 +31,21 @@ restarts (the shell is cached; the API is never cached).
 
 Global hotkey ⌃⌥Space: `docs/shortcuts/README.md` (a six-step macOS Shortcut).
 
+## 2b. Let a model tidy your captures (optional)
+
+Copy `.env.example` to `.env` in the checkout that runs the server (`~/quickdo/.env`) and paste your Anthropic key:
+
+```bash
+cp ~/quickdo/.env.example ~/quickdo/.env && open -e ~/quickdo/.env   # set ANTHROPIC_API_KEY=sk-ant-...
+```
+
+No restart needed: the key is read on the next capture. From then on every todo you type is stored immediately and
+then rewritten by Claude Haiku (`claude-haiku-4-5`) into a clean, verb-first title with the details moved into the
+note and deadlines like "until Friday" turned into a due date. A "✨ formatting…" chip shows while it works; if you
+edit the item before the model answers, your edit wins. The original text is kept in the item (`llm.raw`).
+`QUICKDO_LLM=off` in `.env` switches it off; `QUICKDO_LLM_MODEL` picks another model. `.env` is git-ignored and the
+key never leaves your Mac except in the request to Anthropic.
+
 ## 3. Data repo
 
 ```bash
@@ -50,6 +65,7 @@ prompt). The agent (Hermes) writes only `inbox/*.json`; see `docs/AGENT.md`, whi
 | data | `~/quickdo-data` | private repo clone; one writer per path (docs/PLAN.md §6) |
 | config | `~/.config/quickdo/config.json` | optional; copy `config.example.json`; keys: `dataDir, port, timezone, dayStart, dayEnd, slackMinutes, eveningRitualAt, todayCap, slipGraceMin, defaultEstimateMin, pollSeconds, reminders, hermesPatExpires` |
 | secrets | `~/.config/quickdo/secrets.json` | mode 600; ICS URLs and OAuth ids (calendar phases) — never in a repo |
+| Anthropic key | `~/quickdo/.env` | `ANTHROPIC_API_KEY=` for LLM formatting; git-ignored; re-read on every capture |
 | local deny list | `~/.config/quickdo/pii-denylist.txt` | optional extra patterns for `scripts/check-no-pii.sh` |
 | per-machine state | `~/.local/state/quickdo/` | `day.json` (today's ritual state), `built-sha` (last build) |
 | cache | `~/.cache/quickdo/` | calendar cache (later) |

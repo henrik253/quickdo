@@ -229,6 +229,16 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
             moved {item.rescheduleCount}×
           </span>
         )}
+        {item.llm?.status === 'pending' && (
+          <span
+            className="chip llm"
+            data-testid={T.rowChip}
+            data-kind="llm"
+            title="a model is tidying this item"
+          >
+            ✨ formatting…
+          </span>
+        )}
         {item.source.kind === 'agent' && (
           <span className="chip" data-testid={T.rowChip} data-kind="agent">
             {item.source.ref ? (
@@ -242,6 +252,21 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         )}
         {extra}
       </span>
+      {!isDone && (
+        <button
+          type="button"
+          className="remove"
+          data-testid={T.rowRemove}
+          aria-label={`remove "${item.title}"`}
+          title="remove from the list (d)"
+          onClick={(e) => {
+            e.stopPropagation();
+            void rowAction(item.id, 'drop');
+          }}
+        >
+          ✕
+        </button>
+      )}
       {pinnedCopy && (
         <span className="pinned-copy" data-testid={T.habitPinned}>
           {pinnedCopy}

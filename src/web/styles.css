@@ -106,12 +106,6 @@ kbd {
   margin-top: 12px;
 }
 
-@media (min-width: 900px) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 260px;
-  }
-}
-
 .col-main {
   min-width: 0;
   display: flex;
@@ -394,150 +388,6 @@ section h2.amber {
   color: var(--amber);
 }
 
-/* ---------- timeline ---------- */
-
-.timeline {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  height: 560px;
-  overflow: hidden;
-}
-
-.timeline .hour {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 1px dashed var(--line);
-  font-size: 10px;
-  color: var(--muted);
-  padding-left: 4px;
-}
-
-.timeline .busy {
-  position: absolute;
-  left: 40px;
-  right: 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  padding: 2px 6px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.busy.anchor,
-.busy.calendar {
-  background: var(--grey-block);
-  color: var(--text);
-}
-
-.busy.calendar {
-  border: 1px dotted var(--muted);
-}
-
-.busy.block {
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.timeline .now-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 2px solid var(--amber);
-  z-index: 2;
-}
-
-.timeline .slack {
-  position: absolute;
-  left: 0;
-  right: 0;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 4px,
-    var(--surface-2) 4px,
-    var(--surface-2) 8px
-  );
-  border-top: 1px solid var(--line);
-}
-
-.timeline-strip {
-  position: relative;
-  height: 28px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.timeline-strip .busy {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  border-radius: 3px;
-  font-size: 10px;
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 0 3px;
-}
-
-.timeline-strip .now-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-left: 2px solid var(--amber);
-}
-
-.timeline-strip .slack {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 4px,
-    var(--surface-2) 4px,
-    var(--surface-2) 8px
-  );
-}
-
-.capacity {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
-.meter {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--surface-2);
-  overflow: hidden;
-}
-
-.meter > span {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-}
-
-.capacity.amber .meter > span {
-  background: var(--amber);
-}
-
-.capacity.red .meter > span {
-  background: var(--danger);
-}
-
-.capacity.amber .text {
-  color: var(--amber);
-}
-
 /* ---------- misc bars ---------- */
 
 .tipbar {
@@ -682,4 +532,39 @@ section h2.amber {
   font-size: 12px;
   color: var(--muted);
   margin: 10px 0 4px;
+}
+
+/* ---------- layout without the day column (calendar view removed 2026-09-19) ---------- */
+.layout {
+  grid-template-columns: 1fr;
+}
+
+/* ---------- row remove button ---------- */
+.row .remove {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--muted, #888);
+  font: inherit;
+  font-size: 0.9em;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.35;
+}
+.row:hover .remove,
+.row.cursor .remove,
+.row .remove:focus-visible {
+  opacity: 1;
+}
+.row .remove:hover {
+  background: var(--chip-bg, rgba(0, 0, 0, 0.06));
+  color: var(--ink, #222);
+}
+
+/* ---------- llm formatting chip ---------- */
+.chip.llm {
+  opacity: 0.7;
+  font-style: italic;
 }

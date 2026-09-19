@@ -206,4 +206,42 @@ describe('TodayList', () => {
       await Promise.resolve();
     });
   });
+
+  it('[F-027] the ✕ button removes a row optimistically and POSTs drop', async () => {
+    const fetchSpy = mockFetch(() => jsonResponse({ state: makeState([]) }));
+    seedStore(
+      makeState([
+        todayItem({ id: 'A', title: 'Read paper X' }),
+        item({ id: 'B', title: 'Reply to alice' }),
+      ]),
+    );
+    render(<Host />);
+    expect(screen.getAllByTestId(T.rowRemove)).toHaveLength(2);
+    fireEvent.click(within(screen.getByTestId(T.todayRow)).getByTestId(T.rowRemove));
+    expect(screen.queryAllByTestId(T.todayRow)).toHaveLength(0);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/items/A/drop',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+  });
+
+  it('[F-028] a row being formatted by the model shows the formatting chip', () => {
+    seedStore(
+      makeState([
+        todayItem({
+          id: 'A',
+          title: 'for this and that',
+          llm: { status: 'pending', raw: 'for this and that' },
+        }),
+        todayItem({ id: 'B', title: 'Read paper X', llm: { status: 'done', raw: 'read paper x' } }),
+      ]),
+    );
+    render(<TodayList />);
+    const chips = screen.getAllByTestId(T.rowChip).filter((c) => c.dataset.kind === 'llm');
+    expect(chips).toHaveLength(1);
+    expect(chips[0].textContent).toContain('formatting');
+  });
 });

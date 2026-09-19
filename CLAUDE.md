@@ -9,12 +9,14 @@ Read `docs/PLAN.md` (intent), `docs/CONTRACTS.md` (module interfaces + ownership
 
 - **Doing over planning.** No feature may add a step to the capture path. Zero modals.
 - **No personal data in this public repo.** Fixtures/docs use `alice`, `Read paper X`, `Lecture A`, `example.com`.
-  `scripts/check-no-pii.sh` and gitleaks run in CI. Secrets live in `~/.config/quickdo/`, data in `~/quickdo-data/`.
+  `scripts/check-no-pii.sh` and gitleaks run in CI. Secrets live in `~/.config/quickdo/` and the checkout's `.env`
+  (git-ignored; `.env.example` is the template), data in `~/quickdo-data/`.
 - **Every feature has an id (`F-0xx`) in `features.yaml` and a test whose title carries the tag.** A feature is `done`
   only when `npm run features` passes. Bug fixes start with a failing test at the lowest layer.
 - **Keep `docs/ROADMAP.md` current** in the same change: move items, add implementation notes and known gaps.
 - `src/domain` is pure (no I/O, no node/react imports); `tsconfig.domain.json` + `domain-purity.test.ts` enforce it.
-- All config through `src/server/config.ts`; nothing else reads `process.env`.
+- All config through `src/server/config.ts` (including `.env`); nothing else reads `process.env`.
+- LLM calls go through `src/server/llm/` using `@anthropic-ai/sdk`; the capture path never waits for a model.
 
 ## Commands
 

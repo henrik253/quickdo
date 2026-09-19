@@ -44,6 +44,7 @@ const EDITABLE_KEYS: ReadonlyArray<keyof EditablePatch> = [
   'order',
   'checkpoint',
   'scheduledFor',
+  'llm',
 ];
 
 const INGEST_GUARDED = new Set(['title', 'note', 'cue', 'due', 'estimateMin']);

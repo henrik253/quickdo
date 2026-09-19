@@ -8,6 +8,8 @@
  *   QUICKDO_SYNC=off   → disable git sync
  *   QUICKDO_TEST_CLOCK=1 → enable POST /api/_test/clock
  *   QUICKDO_BUILD_SHA  → reported as buildSha by /api/version
+ *   ANTHROPIC_API_KEY  → enables LLM formatting of captures (also read from <cwd>/.env, never logged)
+ *   QUICKDO_LLM_MODEL  → formatting model (default claude-haiku-4-5); QUICKDO_LLM=off disables formatting
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -47,6 +49,14 @@ export const ConfigFileSchema = z
 
 export type ConfigFile = z.infer<typeof ConfigFileSchema>;
 
+export interface LlmConfig {
+  enabled: boolean; // false when QUICKDO_LLM=off
+  model: string;
+  /** Present at boot or not; the formatter re-reads .env lazily so a key added later works without a restart. */
+  apiKey: string | null;
+  envFile: string | null;
+}
+
 export interface Config {
   home: string;
   configPath: string;
@@ -62,6 +72,7 @@ export interface Config {
   hermesPatExpires: string | null;
   /** QUICKDO_BUILD_SHA if set; index.ts falls back to the git sha, then 'dev'. */
   buildSha: string | null;
+  llm: LlmConfig;
   /** Non-fatal problems found while loading (e.g. an invalid config.json, which is then ignored). */
   problems: string[];
 }
@@ -102,8 +113,61 @@ function envPort(value: string | undefined, problems: string[]): number | undefi
   return n;
 }
 
-export function loadConfig(env: Env = process.env): Config {
+/** Parse a dotenv file: KEY=VALUE lines, `#` comments, optional single/double quotes. Never throws. */
+export function parseDotEnv(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const line of text.split(/\r?\n/)) {
+    const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (!m) continue;
+    let value = m[2].trim();
+    if (value.startsWith('#')) value = '';
+    else if (
+      (value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
+      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)
+    ) {
+      value = value.slice(1, -1);
+    } else {
+      value = value.replace(/\s+#.*$/, '').trim();
+    }
+    out[m[1]] = value;
+  }
+  return out;
+}
+
+export function readDotEnv(path: string | null): Record<string, string> {
+  if (!path || !existsSync(path)) return {};
+  try {
+    return parseDotEnv(readFileSync(path, 'utf8'));
+  } catch {
+    return {};
+  }
+}
+
+export const DEFAULT_LLM_MODEL = 'claude-haiku-4-5';
+
+/** The Anthropic key right now: real environment first, then the .env file (re-read every call, never cached). */
+export function llmApiKey(envFile: string | null, env: Env = process.env): string | null {
+  const fromEnv = env.ANTHROPIC_API_KEY;
+  if (fromEnv !== undefined && fromEnv !== '') return fromEnv;
+  const fromFile = readDotEnv(envFile).ANTHROPIC_API_KEY;
+  return fromFile !== undefined && fromFile !== '' ? fromFile : null;
+}
+
+export function loadConfig(
+  env: Env = process.env,
+  envFile: string | null = join(process.cwd(), '.env'),
+): Config {
   const problems: string[] = [];
+  // Real environment wins over .env; .env is where Henrik keeps the Anthropic key (git-ignored).
+  const dotenv = readDotEnv(envFile);
+  const get = (k: string): string | undefined => {
+    const v = env[k];
+    return v !== undefined && v !== ''
+      ? v
+      : dotenv[k] !== undefined && dotenv[k] !== ''
+        ? dotenv[k]
+        : undefined;
+  };
   const home = env.QUICKDO_HOME && env.QUICKDO_HOME !== '' ? resolve(env.QUICKDO_HOME) : homedir();
   const configPath = join(home, '.config', 'quickdo', 'config.json');
   const file = readConfigFile(configPath, problems);
@@ -146,6 +210,12 @@ export function loadConfig(env: Env = process.env): Config {
     },
     hermesPatExpires: file.hermesPatExpires ?? null,
     buildSha: env.QUICKDO_BUILD_SHA && env.QUICKDO_BUILD_SHA !== '' ? env.QUICKDO_BUILD_SHA : null,
+    llm: {
+      enabled: (get('QUICKDO_LLM') ?? '').toLowerCase() !== 'off',
+      model: get('QUICKDO_LLM_MODEL') ?? DEFAULT_LLM_MODEL,
+      apiKey: get('ANTHROPIC_API_KEY') ?? null,
+      envFile,
+    },
     problems,
   };
 }

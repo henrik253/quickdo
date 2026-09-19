@@ -8,10 +8,18 @@ import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
 import { parseCapture } from '../domain/capture/parseCapture';
 import { ItemSchema, ScheduleSchema } from '../domain/schema';
-import { addDays, todayISO } from '../domain/time';
-import type { Action, EditablePatch, Schedule, Settings } from '../domain/types';
+import { addDays, todayISO, toInstant } from '../domain/time';
+import type {
+  Action,
+  EditablePatch,
+  LlmFormat,
+  ParsedCapture,
+  Schedule,
+  Settings,
+} from '../domain/types';
 import type { Broadcaster } from './broadcast';
 import type { ServerClock } from './clock';
+import { buildPatch, type Formatter } from './llm/format';
 import type { Logger } from './log';
 import { securityMiddleware } from './security';
 import type { Store, VersionInfo } from './state';
@@ -19,6 +27,10 @@ import { mountStatic } from './static';
 
 export interface AppDeps {
   store: Store;
+  /** LLM formatting of captures (docs/ROADMAP.md); absent or unavailable → items are stored as typed. */
+  formatter?: Formatter;
+  /** Test hook: called when a background formatting run finished (done | failed | skipped). */
+  onFormatSettled?: (id: string, status: LlmFormat['status']) => void;
   clock: ServerClock;
   settings: Settings;
   port: number;
@@ -178,15 +190,67 @@ export function createApp(deps: AppDeps): Hono {
     });
     if (!result.changed || !result.item)
       return c.json({ error: result.warning ?? 'no title' }, 400);
+    let item = result.item;
+    if (deps.formatter?.available()) {
+      const raw = body.data.text;
+      const marked = store.dispatch({
+        type: 'edit',
+        id: item.id,
+        patch: { llm: { status: 'pending', raw } },
+      });
+      if (marked.changed && marked.item) item = marked.item;
+      void runFormat(item.id, raw, parsed, item.updatedAt);
+    }
     return c.json(
       {
-        item: result.item,
+        item,
         parsed: { tokens: parsed.tokens, warnings: parsed.warnings },
         state: state(),
       },
       201,
     );
   });
+
+  /** Background formatting: never blocks the capture; parser fields win; a user edit in between wins too. */
+  async function runFormat(
+    id: string,
+    raw: string,
+    parsed: ParsedCapture,
+    baseUpdatedAt: string,
+  ): Promise<void> {
+    const formatter = deps.formatter;
+    if (!formatter) return;
+    let status: LlmFormat['status'] = 'failed';
+    const mark = (s: LlmFormat['status']) =>
+      store.dispatch({
+        type: 'edit',
+        id,
+        patch: { llm: { status: s, raw, at: toInstant(clock), model: formatter.model } },
+      });
+    try {
+      const res = await formatter.format({ raw, parsed, today: todayISO(clock), tz: clock.tz });
+      const current = store.findItem(id);
+      if (!current || current.status === 'dropped') {
+        status = 'skipped';
+      } else if (current.updatedAt !== baseUpdatedAt) {
+        mark('skipped');
+        status = 'skipped';
+      } else {
+        store.dispatch({
+          type: 'edit',
+          id,
+          patch: buildPatch(current, parsed, res, { at: toInstant(clock), model: formatter.model }),
+        });
+        status = 'done';
+      }
+    } catch (e) {
+      log('warn', 'llm formatting failed', { id, error: (e as Error).message });
+      const current = store.findItem(id);
+      if (current && current.status !== 'dropped') mark('failed');
+    } finally {
+      deps.onFormatSettled?.(id, status);
+    }
+  }
 
   // ---------- items ----------
 

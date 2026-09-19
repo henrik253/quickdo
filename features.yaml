@@ -60,26 +60,24 @@
   - e2e/today.spec.ts#[F-008] x on a row updates the progress label and moves the row to the done section
   - src/web/components/ProgressBar.test.tsx#[F-008] renders one segment per committed Today item with its status
 - id: F-009
-  title: Time blocks and the day timeline
+  title: Time blocks (`@` places a block; the day timeline view was removed 2026-09-19 at Henrik's request)
   practice: time-blocking beats lists
   status: done
   tests:
   - src/web/components/TodayList.test.tsx#[F-009] [ and ] shift the block by 15 min through PATCH
   - src/web/focus.test.ts#[F-009] inline editors, block shifts, fresh start, view toggle, help
 - id: F-010
-  title: Capacity meter (amber at 90 %, red over 100 %)
+  title: Capacity meter (removed from the UI with the timeline 2026-09-19; capacity is still computed and drives the tips)
   practice: a calendar has capacity, a list does not; 1–2 h slack
-  status: done
-  tests:
-  - src/domain/plan/nextFreeSlot.test.ts#[F-010] returns null when the block does not fit before the day end
-  - 'src/domain/state/derive.test.ts#[F-010] an empty day: free = dayEnd − now, only slack is used, level ok'
+  status: planned
+  tests: []
 - id: F-011
   title: Checkpoints on blocks ≥ 60 min
   practice: intermediate deadlines (Ariely & Wertenbroch 2002)
   status: in-progress
   tests: []
 - id: F-012
-  title: Anchors and slack band
+  title: Anchors and slack (still subtracted from capacity; no visual band since the timeline was removed)
   practice: fixed anchors, flexible content (Polivy & Herman)
   status: in-progress
   tests:
@@ -181,3 +179,20 @@
   tests:
   - test/server/sync.git.test.ts#[F-026] ingests a pushed inbox command, removes the file and pushes the result
   - test/server/sync.inbox.test.ts#[F-026] bad inbox files are rejected with an error file while valid siblings are ingested
+- id: F-027
+  title: Remove button (✕) on every open row in Today, Backlog and Upcoming — drops an accidental item
+  practice: fast use, zero planning overhead
+  status: done
+  tests:
+  - src/web/components/TodayList.test.tsx#[F-027] the ✕ button removes a row optimistically and POSTs drop
+- id: F-028
+  title: LLM formatting of captures (Claude Haiku turns a hurried line into a clean todo; parser fields win; raw text kept)
+  practice: capture in seconds, doing over planning
+  status: done
+  tests:
+  - test/server/llm.format.test.ts#[F-028] stores the item immediately as pending, then applies the formatted fields
+  - test/server/llm.format.test.ts#[F-028] a user edit before the model answers wins; the result is skipped
+  - src/web/components/TodayList.test.tsx#[F-028] a row being formatted by the model shows the formatting chip
+  - test/server/config.dotenv.test.ts#[F-028] takes the key from .env when the environment has none, and the real environment wins
+  manual:
+  - 'Put ANTHROPIC_API_KEY into ~/quickdo/.env, capture ''for this and that this needs to change until friday'' → title rewritten, due set  # pending: Henrik''s key'

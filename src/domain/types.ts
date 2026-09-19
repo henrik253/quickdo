@@ -33,6 +33,13 @@ export interface Source {
   dedupeKey?: string;
 }
 
+export interface LlmFormat {
+  status: 'pending' | 'done' | 'failed' | 'skipped';
+  raw: string; // the text exactly as captured, so a bad rewrite can always be recovered
+  at?: ISOInstant;
+  model?: string;
+}
+
 export interface Item {
   id: string; // ULID, assigned by the Mac
   title: string;
@@ -54,6 +61,8 @@ export interface Item {
   source: Source;
   createdAt: ISOInstant;
   updatedAt: ISOInstant;
+  /** Filled when a capture was handed to the formatting model (docs/ROADMAP.md, LLM formatting). */
+  llm?: LlmFormat;
   startedAt?: ISOInstant; // set by `start`, cleared by done/undo/skip; used for slip detection
   completedAt?: ISOInstant;
   skippedOn?: ISODate;
@@ -217,6 +226,7 @@ export type EditablePatch = Partial<
     | 'order'
     | 'checkpoint'
     | 'scheduledFor'
+    | 'llm'
   >
 >;
 
