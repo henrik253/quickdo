@@ -59,7 +59,12 @@ function run(checkout: string, state: string, tag: string) {
   return spawnSync('bash', [join(checkout, 'bin', 'run.sh')], {
     cwd: checkout,
     encoding: 'utf8',
-    env: { ...process.env, QUICKDO_STATE_DIR: state, QUICKDO_FIXTURE_TAG: tag, QUICKDO_NODE: process.execPath },
+    env: {
+      ...process.env,
+      QUICKDO_STATE_DIR: state,
+      QUICKDO_FIXTURE_TAG: tag,
+      QUICKDO_NODE: process.execPath,
+    },
     timeout: 60_000,
   });
 }

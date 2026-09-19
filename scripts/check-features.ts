@@ -112,7 +112,8 @@ export function renderAcceptance(features: Feature[]): string {
   for (const f of features) {
     const tests = f.tests.length ? f.tests.map((t) => `\`${mdCell(t)}\``).join('<br>') : '—';
     const manual = f.manual?.length ? f.manual.map((m) => mdCell(m)).join('<br>') : '—';
-    const status = f.status === 'done' ? '✅ done' : f.status === 'in-progress' ? '🛠 in-progress' : '⬜ planned';
+    const status =
+      f.status === 'done' ? '✅ done' : f.status === 'in-progress' ? '🛠 in-progress' : '⬜ planned';
     lines.push(
       `| ${f.id} | ${mdCell(f.title)} | ${status} | ${mdCell(f.practice ?? '')} | ${tests} | ${manual} |`,
     );
@@ -165,7 +166,9 @@ export function checkFeatures(root: string): CheckResult {
         continue;
       }
       if (f.status === 'done') {
-        const live = matches.filter((c) => !c.modifiers.includes('skip') && !c.modifiers.includes('todo'));
+        const live = matches.filter(
+          (c) => !c.modifiers.includes('skip') && !c.modifiers.includes('todo'),
+        );
         if (live.length === 0) {
           errors.push(`${f.id}: test is skipped/todo in ${file}: '${title}'`);
         }

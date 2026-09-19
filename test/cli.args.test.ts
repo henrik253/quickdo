@@ -20,7 +20,10 @@ describe('bin/lib/args.mjs', () => {
 
   it('[F-003] a leading known command selects it, and -- ends flag parsing', () => {
     expect(parseArgs(['status'])).toMatchObject({ command: 'status', text: '' });
-    expect(parseArgs(['doctor', '--port', '7778'])).toMatchObject({ command: 'doctor', port: 7778 });
+    expect(parseArgs(['doctor', '--port', '7778'])).toMatchObject({
+      command: 'doctor',
+      port: 7778,
+    });
     expect(parseArgs(['--', 'status', '--today'])).toMatchObject({
       command: 'capture',
       text: 'status --today',

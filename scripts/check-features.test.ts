@@ -67,25 +67,37 @@ describe('scripts/check-features.ts', () => {
   });
 
   it('[F-024] a done feature without tests fails', () => {
-    const r = checkFeatures(fixture(YAML.replace('tests: []', 'tests: []').replace('status: planned', 'status: done')));
+    const r = checkFeatures(
+      fixture(YAML.replace('tests: []', 'tests: []').replace('status: planned', 'status: done')),
+    );
     expect(r.ok).toBe(false);
     expect(r.errors).toContain('F-003: status done but no tests listed');
   });
 
   it('[F-024] a missing test file fails', () => {
-    const r = checkFeatures(fixture(YAML.replace('src/a.test.ts#[F-001]', 'src/missing.test.ts#[F-001]')));
+    const r = checkFeatures(
+      fixture(YAML.replace('src/a.test.ts#[F-001]', 'src/missing.test.ts#[F-001]')),
+    );
     expect(r.errors).toContain('F-001: test file missing: src/missing.test.ts');
   });
 
   it('[F-024] a title not found inside an it()/test() call fails', () => {
     const r = checkFeatures(fixture(YAML.replace('Enter appends a row', 'Enter does nothing')));
-    expect(r.errors.some((e) => e.startsWith("F-001: title not found in an it()/test() call in src/a.test.ts"))).toBe(true);
+    expect(
+      r.errors.some((e) =>
+        e.startsWith('F-001: title not found in an it()/test() call in src/a.test.ts'),
+      ),
+    ).toBe(true);
   });
 
   it('[F-024] a done feature whose test is .skip or .todo fails, but in-progress may use .todo', () => {
-    const skipped = fixture(YAML, { 'src/a.test.ts': TEST_SRC.replace("it('[F-001]", "it.skip('[F-001]") });
+    const skipped = fixture(YAML, {
+      'src/a.test.ts': TEST_SRC.replace("it('[F-001]", "it.skip('[F-001]"),
+    });
     const r = checkFeatures(skipped);
-    expect(r.errors).toContain("F-001: test is skipped/todo in src/a.test.ts: '[F-001] Enter appends a row'");
+    expect(r.errors).toContain(
+      "F-001: test is skipped/todo in src/a.test.ts: '[F-001] Enter appends a row'",
+    );
     expect(r.errors.filter((e) => e.startsWith('F-002'))).toEqual([]);
   });
 
