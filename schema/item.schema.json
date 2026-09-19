@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "note": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "done",
+        "skipped",
+        "dropped"
+      ]
+    },
+    "scheduledFor": {
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+    },
+    "suggestedFor": {
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+    },
+    "block": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+        },
+        "minutes": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 1440
+        }
+      },
+      "required": [
+        "start",
+        "minutes"
+      ],
+      "additionalProperties": false
+    },
+    "estimateMin": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "cue": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "fallback": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1440
+        },
+        "at": {
+          "type": "string",
+          "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+        }
+      },
+      "required": [
+        "minutes"
+      ],
+      "additionalProperties": false
+    },
+    "project": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 100
+      }
+    },
+    "due": {
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+    },
+    "repeat": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekdays",
+        "weekly:mon",
+        "weekly:tue",
+        "weekly:wed",
+        "weekly:thu",
+        "weekly:fri",
+        "weekly:sat",
+        "weekly:sun"
+      ]
+    },
+    "checkpoint": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rescheduleCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "order": {
+      "type": "number"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "ui",
+            "hotkey",
+            "cli",
+            "agent"
+          ]
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "ref": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "dedupeKey": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "createdAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "updatedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "startedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "completedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
+    },
+    "skippedOn": {
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$"
+    },
+    "droppedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?(Z|[+-]\\d{2}:\\d{2})$"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "status",
+    "tags",
+    "rescheduleCount",
+    "order",
+    "source",
+    "createdAt",
+    "updatedAt"
+  ],
+  "additionalProperties": {},
+  "$id": "https://example.com/quickdo/schema/item.schema.json"
+}
