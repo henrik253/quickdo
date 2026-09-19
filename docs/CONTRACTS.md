@@ -197,8 +197,7 @@ file → `rejected/` + error file; oversize / bad name → rejected. Use an in-m
 - `focus.ts` — the two-mode focus model (`docs/PLAN.md` §8) as a pure key → action mapper, tested.
 - Components: `CaptureBar` (input + live chips from `parseCapture`, Enter, ⌘Enter, Esc, ↑ recall, `?` filter),
   `TodayList` (rows with keys, done section, soft-cap amber header when `derived.overCap`, rollover chip), `HabitsStrip`,
-  `Backlog`, `Upcoming`, `ProgressBar` (segments + label + `habitsDone/habitsDue`), `Timeline` (vertical day column:
-  anchors, blocks, now-line, slack band; capacity meter), `SlipBanner` (rows with slips: `2 o n f T s`), `TipBar`
+  `Backlog`, `Upcoming`, `ProgressBar` (segments + label + `habitsDone/habitsDue`), `Row` (shared row: chips, inline editors, a ✕ remove button on open non-habit rows, a "✨ formatting…" chip while `item.llm.status === 'pending'`; the day timeline was removed in v0.2), `SlipBanner` (rows with slips: `2 o n f T s`), `TipBar`
   (`tips.json`, rotates every 10 min, contextual group), `SyncBadge`, `StartingBanner` (SSE disconnected → "server
   starting… retrying", polls `/api/health` every 2 s), `KeyHelp` (`?`).
 - `tips.json` — `[{ text, practice, source, group: 'planning'|'capacity'|'slip'|'habit'|'review' }]` from `docs/PLAN.md`

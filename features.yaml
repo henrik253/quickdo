@@ -191,7 +191,7 @@
   status: done
   tests:
   - test/server/llm.format.test.ts#[F-028] stores the item immediately as pending, then applies the formatted fields
-  - test/server/llm.format.test.ts#[F-028] a user edit before the model answers wins; the result is skipped
+  - test/server/llm.format.test.ts#[F-028] a field the user edited before the model answers is kept; the other fields still fill in
   - src/web/components/TodayList.test.tsx#[F-028] a row being formatted by the model shows the formatting chip
   - test/server/config.dotenv.test.ts#[F-028] takes the key from .env when the environment has none, and the real environment wins
   manual:

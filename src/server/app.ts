@@ -12,6 +12,7 @@ import { addDays, todayISO, toInstant } from '../domain/time';
 import type {
   Action,
   EditablePatch,
+  Item,
   LlmFormat,
   ParsedCapture,
   Schedule,
@@ -199,7 +200,9 @@ export function createApp(deps: AppDeps): Hono {
         patch: { llm: { status: 'pending', raw } },
       });
       if (marked.changed && marked.item) item = marked.item;
-      void runFormat(item.id, raw, parsed, item.updatedAt);
+      void runFormat(item.id, raw, parsed, snapshot(item)).catch((e) =>
+        log('error', 'llm formatting task crashed', { id: item.id, error: (e as Error).message }),
+      );
     }
     return c.json(
       {
@@ -211,42 +214,87 @@ export function createApp(deps: AppDeps): Hono {
     );
   });
 
-  /** Background formatting: never blocks the capture; parser fields win; a user edit in between wins too. */
+  const LLM_FIELDS = [
+    'title',
+    'note',
+    'due',
+    'scheduledFor',
+    'estimateMin',
+    'project',
+    'cue',
+    'tags',
+  ] as const;
+  type LlmField = (typeof LLM_FIELDS)[number];
+
+  /** The fields the model may write, as they were right after the capture. */
+  function snapshot(it: Item): Record<LlmField, string> {
+    const out = {} as Record<LlmField, string>;
+    for (const k of LLM_FIELDS) out[k] = JSON.stringify(it[k] ?? null);
+    return out;
+  }
+
+  /**
+   * Background formatting: never blocks the capture. Parser fields win (buildPatch); a field the
+   * user changed while the model was thinking is left alone; everything else the model filled is
+   * applied. A model-chosen date goes through `reschedule` so ordering and history match `t`/`T`.
+   */
   async function runFormat(
     id: string,
     raw: string,
     parsed: ParsedCapture,
-    baseUpdatedAt: string,
+    base: Record<LlmField, string>,
   ): Promise<void> {
     const formatter = deps.formatter;
     if (!formatter) return;
     let status: LlmFormat['status'] = 'failed';
-    const mark = (s: LlmFormat['status']) =>
-      store.dispatch({
-        type: 'edit',
-        id,
-        patch: { llm: { status: s, raw, at: toInstant(clock), model: formatter.model } },
-      });
+    const meta = () => ({ raw, at: toInstant(clock), model: formatter.model });
     try {
       const res = await formatter.format({ raw, parsed, today: todayISO(clock), tz: clock.tz });
       const current = store.findItem(id);
       if (!current || current.status === 'dropped') {
         status = 'skipped';
-      } else if (current.updatedAt !== baseUpdatedAt) {
-        mark('skipped');
-        status = 'skipped';
-      } else {
-        store.dispatch({
-          type: 'edit',
-          id,
-          patch: buildPatch(current, parsed, res, { at: toInstant(clock), model: formatter.model }),
-        });
-        status = 'done';
+        return;
       }
+      const patch = buildPatch(current, parsed, res, {
+        at: toInstant(clock),
+        model: formatter.model,
+      });
+      const now = snapshot(current);
+      let blocked = 0;
+      for (const k of LLM_FIELDS) {
+        if (k in patch && now[k] !== base[k]) {
+          delete patch[k];
+          blocked += 1;
+        }
+      }
+      const { scheduledFor, ...rest } = patch;
+      const applied = Object.keys(rest).length - 1 + (scheduledFor ? 1 : 0); // minus the llm mark
+      status = applied === 0 && blocked > 0 ? 'skipped' : 'done';
+      if (scheduledFor) store.dispatch({ type: 'reschedule', id, to: scheduledFor });
+      store.dispatch({
+        type: 'edit',
+        id,
+        by: 'llm',
+        patch: { ...rest, llm: { status, ...meta() } },
+      });
     } catch (e) {
       log('warn', 'llm formatting failed', { id, error: (e as Error).message });
-      const current = store.findItem(id);
-      if (current && current.status !== 'dropped') mark('failed');
+      try {
+        const current = store.findItem(id);
+        if (current && current.status !== 'dropped') {
+          store.dispatch({
+            type: 'edit',
+            id,
+            by: 'llm',
+            patch: { llm: { status: 'failed', ...meta() } },
+          });
+        }
+      } catch (e2) {
+        log('error', 'could not record the formatting failure', {
+          id,
+          error: (e2 as Error).message,
+        });
+      }
     } finally {
       deps.onFormatSettled?.(id, status);
     }

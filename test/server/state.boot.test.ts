@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { TodosFile } from '../../src/domain/types';
-import { item, makeSandbox, type Sandbox, TODAY, YESTERDAY } from './helpers';
+import { FIXED_NOW, item, makeSandbox, type Sandbox, TODAY, YESTERDAY } from './helpers';
 
 let sb: Sandbox;
 
@@ -206,5 +206,30 @@ describe('state boot', () => {
       anchors: [],
     });
     expect(state.problems[0]).toMatch(/^schedule\.json invalid at/);
+  });
+
+  it('[F-028] an item left in llm pending by a restart is marked failed on boot, keeping the raw text', async () => {
+    const sb = await makeSandbox({
+      todos: [
+        {
+          id: '01K5G3ZQ8H0000000000000009',
+          title: 'call alice',
+          status: 'open',
+          tags: [],
+          rescheduleCount: 0,
+          order: 0,
+          source: { kind: 'ui' },
+          createdAt: FIXED_NOW,
+          updatedAt: FIXED_NOW,
+          llm: { status: 'pending', raw: 'call alice' },
+        },
+      ],
+    });
+    try {
+      const it0 = (await sb.state()).items[0];
+      expect(it0.llm).toEqual({ status: 'failed', raw: 'call alice' });
+    } finally {
+      sb.cleanup();
+    }
   });
 });

@@ -243,7 +243,7 @@ export type Action =
   | { type: 'clearBlock'; id: string }
   | { type: 'shiftBlock'; id: string; minutes: number } // ±15
   | { type: 'nextSlot'; id: string } // `n`: move THIS block to the next free slot; may move at most the ONE next block
-  | { type: 'edit'; id: string; patch: EditablePatch }
+  | { type: 'edit'; id: string; patch: EditablePatch; by?: string } // by: 'llm' for model rewrites
   | { type: 'accept'; id: string } // scheduledFor = suggestedFor
   | { type: 'freshStart' }
   | { type: 'rollover' } // uses clock date; open dated items from earlier days -> Backlog

@@ -108,6 +108,13 @@ describe('buildPatch', () => {
     );
     expect(patch.title).toBeUndefined();
     expect(patch.due).toBeUndefined();
+    const bogus = buildPatch(
+      it0,
+      parsed,
+      { ...RESULT, due: '2026-13-40' },
+      { at: FIXED_NOW, model: 'm' },
+    );
+    expect(bogus.due).toBeUndefined();
     expect(patch.scheduledFor).toBeUndefined();
     expect(patch.tags).toBeUndefined();
   });
@@ -178,7 +185,7 @@ describe('POST /api/capture with a formatter', () => {
     }
   });
 
-  it('[F-028] a user edit before the model answers wins; the result is skipped', async () => {
+  it('[F-028] a field the user edited before the model answers is kept; the other fields still fill in', async () => {
     let release: () => void = () => {};
     const gate = new Promise<void>((r) => {
       release = r;
@@ -192,17 +199,90 @@ describe('POST /api/capture with a formatter', () => {
     try {
       const res = await sb.post('/api/capture', { text: 'call alice' });
       const body = (await res.json()) as { item: Item };
-      sb.clock.setFixed('2026-09-18T09:13:00+02:00');
+      // same frozen second as the capture — the guard must not depend on timestamps
       const edit = await sb.patch(`/api/items/${body.item.id}`, {
         title: 'Call alice about Friday',
       });
       expect(edit.status).toBe(200);
       release();
       const [, status] = await promise;
+      expect(status).toBe('done');
+      const after = (await sb.state()).items.find((i) => i.id === body.item.id);
+      expect(after?.title).toBe('Call alice about Friday');
+      expect(after?.due).toBe('2026-09-25');
+      expect(after?.note).toBe(RESULT.note);
+      expect(after?.llm?.status).toBe('done');
+    } finally {
+      sb.cleanup();
+    }
+  });
+
+  it('[F-028] only the user-changed fields are protected: when the model changes nothing else the result is skipped', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const f = fakeFormatter(async () => {
+      await gate;
+      return { ...RESULT, note: null, due: null, estimateMin: null, tags: [] };
+    });
+    const { promise, cb } = settle();
+    const sb = await makeSandbox({ formatter: f, onFormatSettled: cb });
+    try {
+      const res = await sb.post('/api/capture', { text: 'call alice' });
+      const body = (await res.json()) as { item: Item };
+      await sb.patch(`/api/items/${body.item.id}`, { title: 'Call alice about Friday' });
+      release();
+      const [, status] = await promise;
       expect(status).toBe('skipped');
       const after = (await sb.state()).items.find((i) => i.id === body.item.id);
       expect(after?.title).toBe('Call alice about Friday');
       expect(after?.llm?.status).toBe('skipped');
+    } finally {
+      sb.cleanup();
+    }
+  });
+
+  it('[F-028] starting or finishing the item while the model thinks does not discard the rewrite', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const f = fakeFormatter(async () => {
+      await gate;
+      return RESULT;
+    });
+    const { promise, cb } = settle();
+    const sb = await makeSandbox({ formatter: f, onFormatSettled: cb });
+    try {
+      const res = await sb.post('/api/capture', { text: 'call alice !today' });
+      const body = (await res.json()) as { item: Item };
+      expect((await sb.post(`/api/items/${body.item.id}/start`)).status).toBe(200);
+      expect((await sb.post(`/api/items/${body.item.id}/done`)).status).toBe(200);
+      release();
+      const [, status] = await promise;
+      expect(status).toBe('done');
+      const after = (await sb.state()).items.find((i) => i.id === body.item.id);
+      expect(after?.title).toBe(RESULT.title);
+      expect(after?.status).toBe('done');
+    } finally {
+      sb.cleanup();
+    }
+  });
+
+  it('[F-028] a model-chosen day moves the item like t/T does (ordering + history), never into the past', async () => {
+    const f = fakeFormatter(() => ({ ...RESULT, scheduledFor: '2026-09-19', due: null }));
+    const { promise, cb } = settle();
+    const sb = await makeSandbox({ formatter: f, onFormatSettled: cb });
+    try {
+      const res = await sb.post('/api/capture', { text: 'call alice tomorrow' });
+      const body = (await res.json()) as { item: Item };
+      await promise;
+      const st = await sb.state();
+      const after = st.items.find((i) => i.id === body.item.id);
+      expect(after?.scheduledFor).toBe('2026-09-19');
+      expect(after?.order).toBeGreaterThanOrEqual(1); // dated order, not the negative backlog order
+      expect(st.derived.upcoming[0]?.items.map((i) => i.id)).toContain(body.item.id);
     } finally {
       sb.cleanup();
     }

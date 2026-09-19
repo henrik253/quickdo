@@ -53,7 +53,9 @@ function InlineEditor({
         e.stopPropagation();
         if (e.key === 'Enter') {
           e.preventDefault();
-          onSave(value);
+          // unchanged text is a cancel, so a title rewritten by the model meanwhile is not overwritten
+          if (value.trim() === initial.trim()) onCancel();
+          else onSave(value);
         } else if (e.key === 'Escape') {
           e.preventDefault();
           onCancel();
@@ -252,15 +254,17 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         )}
         {extra}
       </span>
-      {!isDone && (
+      {!isDone && item.repeat === undefined && (
         <button
           type="button"
           className="remove"
           data-testid={T.rowRemove}
           aria-label={`remove "${item.title}"`}
           title="remove from the list (d)"
+          onMouseDown={(e) => e.preventDefault()} // keep the capture bar focused
           onClick={(e) => {
             e.stopPropagation();
+            showToast(`removed "${item.title}"`);
             void rowAction(item.id, 'drop');
           }}
         >

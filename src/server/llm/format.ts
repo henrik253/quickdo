@@ -134,8 +134,13 @@ export function createAnthropicFormatter(opts: AnthropicFormatterOptions): Forma
   return { model: opts.model, available: () => opts.getApiKey() !== null, format };
 }
 
+/** A real calendar date only: matches the schema's YYYY-MM-DD rule and round-trips through Date. */
 function cleanDate(v: string | null | undefined): ISODate | undefined {
-  return v && ISO_DATE.test(v) ? v : undefined;
+  if (!v || !ISO_DATE.test(v)) return undefined;
+  const [y, m, d] = v.split('-').map(Number);
+  const t = new Date(Date.UTC(y, m - 1, d));
+  const ok = t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+  return ok ? v : undefined;
 }
 
 function cleanText(v: string | null | undefined, max: number): string | undefined {

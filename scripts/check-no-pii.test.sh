@@ -91,6 +91,11 @@ expect_fail "[F-026] fine-grained GitHub token is caught" "$r" "x.txt:1"
 r="$(new_repo users)"; echo "cd $USERS" >"$r/x.txt"
 expect_fail "[F-026] absolute home path is caught" "$r" "x.txt:1"
 
+ANT="sk-"
+ANT="${ANT}ant-api03-abcdefghijklmnopqrstuvwxyz0123456789"
+r="$(new_repo antkey)"; echo "ANTHROPIC_API_KEY=$ANT" >"$r/x.txt"
+expect_fail "[F-028] Anthropic API key is caught" "$r" "x.txt:1"
+
 r="$(new_repo mail)"; echo "mail $MAIL" >"$r/x.txt"
 expect_fail "[F-026] email outside example.com is caught" "$r" "x.txt:1:$MAIL"
 

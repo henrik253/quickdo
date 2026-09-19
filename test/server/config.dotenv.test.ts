@@ -26,6 +26,7 @@ describe('parseDotEnv', () => {
         'export QUICKDO_LLM_MODEL="claude-haiku-4-5"',
         "SINGLE='a b'",
         'TRAILING=value # note',
+        'QUOTED_COMMENT="sk-x y" # my key',
         'EMPTY=',
         'not a line',
       ].join('\n'),
@@ -35,6 +36,7 @@ describe('parseDotEnv', () => {
       QUICKDO_LLM_MODEL: 'claude-haiku-4-5',
       SINGLE: 'a b',
       TRAILING: 'value',
+      QUOTED_COMMENT: 'sk-x y',
       EMPTY: '',
     });
   });

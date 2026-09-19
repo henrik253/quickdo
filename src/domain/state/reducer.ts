@@ -172,11 +172,13 @@ function setBlockOn(ctx: Ctx, item: Item, start: string, minutes: number): void 
 function moveToDate(ctx: Ctx, item: Item, to: ISODate | null): void {
   const from = item.scheduledFor;
   if (to === null) {
+    const order = backlogOrder(ctx);
     delete item.scheduledFor;
-    item.order = backlogOrder(ctx);
+    item.order = order;
   } else {
+    const order = datedOrder(ctx, to);
     item.scheduledFor = to;
-    item.order = datedOrder(ctx, to);
+    item.order = order;
   }
   if (from !== to) delete item.block;
   if (from !== undefined && (to === null || to > from)) item.rescheduleCount += 1;
@@ -432,7 +434,7 @@ function applyPatch(
   return changed;
 }
 
-function edit(ctx: Ctx, id: string, patch: EditablePatch): ReduceResult {
+function edit(ctx: Ctx, id: string, patch: EditablePatch, by?: string): ReduceResult {
   const item = find(ctx, id);
   if (!item) return fail(ctx.state, 'not_found');
   if (item.status === 'dropped') return fail(ctx.state, 'gone');
@@ -440,7 +442,7 @@ function edit(ctx: Ctx, id: string, patch: EditablePatch): ReduceResult {
   if (changed.length === 0) return fail(ctx.state, 'nothing to change');
   if (item.title.trim() === '') return fail(ctx.state, 'no title');
   touch(ctx, item);
-  emit(ctx, 'edited', { itemId: item.id, detail: changed.join(',') });
+  emit(ctx, 'edited', { itemId: item.id, by, detail: changed.join(',') });
   return ok(ctx, item);
 }
 
@@ -654,7 +656,7 @@ function run(ctx: Ctx, action: Action): ReduceResult {
     case 'nextSlot':
       return nextSlot(ctx, action.id);
     case 'edit':
-      return edit(ctx, action.id, action.patch);
+      return edit(ctx, action.id, action.patch, action.by);
     case 'accept':
       return accept(ctx, action.id);
     case 'freshStart':

@@ -244,4 +244,21 @@ describe('TodayList', () => {
     expect(chips).toHaveLength(1);
     expect(chips[0].textContent).toContain('formatting');
   });
+
+  it('[F-027] done rows have no ✕ button', () => {
+    seedStore(
+      makeState([
+        todayItem({ id: 'A', title: 'Read paper X' }),
+        todayItem({
+          id: 'B',
+          title: 'Done thing',
+          status: 'done',
+          completedAt: '2026-09-18T08:00:00+02:00',
+        }),
+      ]),
+    );
+    render(<TodayList />);
+    expect(screen.getAllByTestId(T.rowRemove)).toHaveLength(1);
+    expect(within(screen.getByTestId(T.doneSection)).queryByTestId(T.rowRemove)).toBeNull();
+  });
 });

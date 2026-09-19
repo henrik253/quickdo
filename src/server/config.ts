@@ -120,15 +120,11 @@ export function parseDotEnv(text: string): Record<string, string> {
     const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
     if (!m) continue;
     let value = m[2].trim();
+    const quoted =
+      /^"((?:[^"\\]|\\.)*)"\s*(?:#.*)?$/.exec(value) ?? /^'([^']*)'\s*(?:#.*)?$/.exec(value);
     if (value.startsWith('#')) value = '';
-    else if (
-      (value.startsWith('"') && value.endsWith('"') && value.length >= 2) ||
-      (value.startsWith("'") && value.endsWith("'") && value.length >= 2)
-    ) {
-      value = value.slice(1, -1);
-    } else {
-      value = value.replace(/\s+#.*$/, '').trim();
-    }
+    else if (quoted) value = quoted[1];
+    else value = value.replace(/\s+#.*$/, '').trim();
     out[m[1]] = value;
   }
   return out;

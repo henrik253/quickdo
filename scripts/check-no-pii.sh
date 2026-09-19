@@ -25,6 +25,8 @@ tok_classic="gh"
 tok_classic="${tok_classic}p_"
 tok_fine="github_"
 tok_fine="${tok_fine}pat_"
+ant_key="sk-"
+ant_key="${ant_key}ant-"
 
 PATTERNS=(
   "${g}\.com/calendar/ical"
@@ -33,6 +35,7 @@ PATTERNS=(
   "private-[0-9a-f]{32}"
   "${tok_classic}[A-Za-z0-9]{20,}"
   "${tok_fine}"
+  "${ant_key}[A-Za-z0-9_-]{20,}"
   "${users_root}[a-z]+/"
 )
 EMAIL='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'

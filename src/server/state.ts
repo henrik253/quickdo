@@ -439,6 +439,15 @@ export function createStore(deps: StoreDeps): Store {
       };
       loadHistory();
       rolloverIfNeeded();
+      const stuck = state.todos.items.filter((it) => it.llm?.status === 'pending');
+      for (const it of stuck) {
+        dispatch({ type: 'edit', id: it.id, patch: { llm: { ...it.llm!, status: 'failed' } } });
+      }
+      if (stuck.length > 0) {
+        log('warn', 'formatting was interrupted by a restart; items kept as typed', {
+          items: stuck.length,
+        });
+      }
       dirty.clear();
       log('info', 'state loaded', {
         items: state.todos.items.length,
