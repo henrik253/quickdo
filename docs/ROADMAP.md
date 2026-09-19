@@ -146,6 +146,11 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 
 ## Implementation notes
 
+- 2026-09-19 (sync): on the CI runner the "20 rapid local changes while hermes pushes" test hit RECOVERY twice in a
+  row — the UI writes `todos.json` while a cycle runs, and a `rebase --autostash` can fail on a file that changed
+  underneath it. That is not a real conflict: `rebaseOntoRemote()` in `src/server/sync/cycle.ts` now aborts, commits
+  the freshly written Mac-owned files (`ui: N change(s)`) and retries the rebase once before falling back to RECOVERY.
+
 - 2026-09-19 (v0.2 deploy incident): the first self-update pulled the new commit but `npm ci` failed twice with
   `ENOTEMPTY … node_modules/date-fns` (npm 10 deleting an existing `node_modules`), so `run.sh` correctly kept the old
   build — but `/api/version` reported git HEAD and the update check compared `stable` against HEAD, so the app looked

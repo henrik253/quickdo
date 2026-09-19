@@ -159,6 +159,30 @@ async function ingestInbox(ctx: CycleContext): Promise<IngestSummary> {
   return summary;
 }
 
+/**
+ * Rebase onto origin/<branch>. The UI keeps writing Mac-owned files while a cycle runs, so a rebase
+ * can fail only because todos.json changed underneath it; that is not a conflict — commit what was
+ * written and retry once. Anything else propagates to the caller (RECOVERY).
+ */
+async function rebaseOntoRemote(ctx: CycleContext): Promise<void> {
+  try {
+    await ctx.git.run(['rebase', '--autostash', `origin/${ctx.branch}`]);
+    return;
+  } catch (first) {
+    await ctx.git.tryRun(['rebase', '--abort']);
+    const staged = await stageMacOwned(ctx);
+    if (staged > 0 && (await hasStaged(ctx))) {
+      await commit(ctx, `ui: ${staged} change(s)`);
+      ctx.host.log('warn', 'rebase retried after committing files written during the cycle', {
+        files: staged,
+      });
+      await ctx.git.run(['rebase', '--autostash', `origin/${ctx.branch}`]);
+      return;
+    }
+    throw first;
+  }
+}
+
 /** Push local commits; on non-fast-forward rebase and retry. Returns true when everything is pushed. */
 async function pushWithRetry(ctx: CycleContext): Promise<boolean> {
   for (let attempt = 1; attempt <= PUSH_TRIES; attempt++) {
@@ -176,7 +200,7 @@ async function pushWithRetry(ctx: CycleContext): Promise<boolean> {
           return false;
         }
         try {
-          await ctx.git.run(['rebase', '--autostash', `origin/${ctx.branch}`]);
+          await rebaseOntoRemote(ctx);
         } catch (rebaseErr) {
           const message = rebaseErr instanceof Error ? rebaseErr.message : String(rebaseErr);
           ctx.status.conflict = await runRecovery(ctx.git, ctx.host, ctx.branch, message);
@@ -257,7 +281,7 @@ export async function runCycle(ctx: CycleContext, force: boolean): Promise<SyncS
     const after = await remoteTrackingSha(ctx);
     if (before !== after) {
       try {
-        await git.run(['rebase', '--autostash', `origin/${ctx.branch}`]);
+        await rebaseOntoRemote(ctx);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         status.conflict = await runRecovery(git, host, ctx.branch, message);
