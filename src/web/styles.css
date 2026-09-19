@@ -595,7 +595,8 @@ section h2.amber {
   font-size: 0.85rem;
 }
 .done-chart .ranges {
-  margin-left: auto;
+  margin: 0 0 0 auto;
+  min-width: 0;
   display: inline-flex;
   gap: 2px;
   border: 1px solid var(--rule, #d9ddd7);

@@ -31,11 +31,14 @@ export function DoneChart() {
   const [range, setRange] = useState<StatsRange>(readStoredRange);
   const [stats, setStats] = useState<DoneStats | null>(null);
   const connected = useStore((s) => s.connected);
-  const version = useStore((s) => s.state?.derived.progress.done);
-  const items = useStore((s) => s.state?.items.length);
+  const doneToday = useStore((s) => s.state?.derived.progress.done);
+  const itemCount = useStore((s) => s.state?.items.length);
+  // anything that can change the counts re-fetches (debounced): a state event, a reconnect
+  const refreshKey = `${connected}:${doneToday ?? 0}:${itemCount ?? 0}`;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!refreshKey) return;
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       api
@@ -48,7 +51,7 @@ export function DoneChart() {
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [range, version, items, connected]);
+  }, [range, refreshKey]);
 
   const choose = (r: StatsRange) => {
     setRange(r);
@@ -69,7 +72,7 @@ export function DoneChart() {
             ? `${stats.total} done in the last ${RANGE_LABEL[stats.range]} · ${stats.perDay} per day`
             : 'loading…'}
         </span>
-        <div className="ranges" role="group" aria-label="range">
+        <fieldset className="ranges" aria-label="range">
           {STATS_RANGES.map((r) => (
             <button
               key={r}
@@ -83,7 +86,7 @@ export function DoneChart() {
               {r}
             </button>
           ))}
-        </div>
+        </fieldset>
       </div>
       {stats && (
         <>
