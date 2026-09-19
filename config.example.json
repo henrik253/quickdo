@@ -1,0 +1,15 @@
+{
+  "dataDir": "~/quickdo-data",
+  "port": 7777,
+  "timezone": "Europe/Berlin",
+  "dayStart": "08:00",
+  "dayEnd": "22:00",
+  "slackMinutes": 90,
+  "eveningRitualAt": "20:00",
+  "todayCap": 5,
+  "slipGraceMin": 10,
+  "defaultEstimateMin": 30,
+  "pollSeconds": 60,
+  "reminders": { "blockStart": true, "checkpoint": true, "fallback": true, "evening": true },
+  "hermesPatExpires": "2027-09-01"
+}

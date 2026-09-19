@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist.next/
+dist.prev/
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+*.log
+.env
+.env.*
+data/
+secrets/
+tokens/
+*.ics
+*.local.json
+.vite/

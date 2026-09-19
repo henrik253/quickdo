@@ -1,0 +1,138 @@
+# Feature checklist — the contract between "what the app claims" and "what a test proves".
+# status: planned | in-progress | done. A `done` feature must list ≥ 1 existing, non-skipped test as file#title.
+# scripts/check-features.ts enforces this in CI and renders docs/ACCEPTANCE.md.
+- id: F-001
+  title: Capture bar (focused on open, Enter appends, row flashes, draft kept on failure)
+  practice: capture everything (Allen 2001)
+  status: planned
+  tests: []
+- id: F-002
+  title: Quick syntax with live chips
+  practice: concrete plans remove intrusion (Masicampo & Baumeister 2011)
+  status: planned
+  tests: []
+- id: F-003
+  title: Capture from anywhere (Shortcut hotkey + CLI hit POST /api/capture)
+  practice: capture in seconds
+  status: planned
+  tests: []
+  manual:
+    - "Press ⌃⌥Space after a reboot, type a todo, see the notification"
+- id: F-004
+  title: Backlog vs Today plus morning rollover
+  practice: separate master list from daily commitment; plan only the next step
+  status: planned
+  tests: []
+- id: F-005
+  title: Tiny Today, soft cap (amber header from item 6)
+  practice: 3–5 item daily list
+  status: planned
+  tests: []
+- id: F-006
+  title: Padded estimates shown everywhere
+  practice: planning fallacy (Buehler, Griffin & Ross 1994)
+  status: planned
+  tests: []
+- id: F-007
+  title: If-then cue (block counts as cue; `c` or evening ritual sets it; never prompted on the fast path)
+  practice: implementation intentions (Gollwitzer & Sheeran 2006)
+  status: planned
+  tests: []
+- id: F-008
+  title: Progress bar with one segment per committed Today item
+  practice: progress principle (Amabile & Kramer 2011)
+  status: planned
+  tests: []
+- id: F-009
+  title: Time blocks and the day timeline
+  practice: time-blocking beats lists
+  status: planned
+  tests: []
+- id: F-010
+  title: Capacity meter (amber at 90 %, red over 100 %)
+  practice: a calendar has capacity, a list does not; 1–2 h slack
+  status: planned
+  tests: []
+- id: F-011
+  title: Checkpoints on blocks ≥ 60 min
+  practice: intermediate deadlines (Ariely & Wertenbroch 2002)
+  status: planned
+  tests: []
+- id: F-012
+  title: Anchors and slack band
+  practice: fixed anchors, flexible content (Polivy & Herman)
+  status: planned
+  tests: []
+- id: F-013
+  title: Slip banner; only the next block ever moves
+  practice: slip recovery (Polivy & Herman)
+  status: planned
+  tests: []
+- id: F-014
+  title: Self-forgiveness copy, no failure counters
+  practice: Wohl, Pychyl & Bennett 2010; Sirois 2014
+  status: planned
+  tests: []
+- id: F-015
+  title: Fresh start (`.`) leaves future blocks alone
+  practice: fresh-start effect (Dai, Milkman & Riis 2014)
+  status: planned
+  tests: []
+- id: F-016
+  title: Pre-planned fallback (derived 15 min at 16:00)
+  practice: pre-planned fallback; behavioural activation
+  status: planned
+  tests: []
+- id: F-017
+  title: Two-minute start (`2`)
+  practice: behavioural activation
+  status: planned
+  tests: []
+- id: F-018
+  title: Habits strip with never-miss-twice (no streak counter)
+  practice: Lally et al. 2010
+  status: planned
+  tests: []
+- id: F-019
+  title: Evening ritual (pick 2–3 for tomorrow with cues)
+  practice: evening if-then planning
+  status: planned
+  tests: []
+- id: F-020
+  title: Sunday review (drop after 3 reschedules)
+  practice: weekly review
+  status: planned
+  tests: []
+- id: F-021
+  title: Tips with sources, rotating and contextual
+  practice: tips with sources
+  status: planned
+  tests: []
+- id: F-022
+  title: Agent transparency (sync badge, toast, suggestion chip, source link)
+  practice: trust in the agent channel
+  status: planned
+  tests: []
+- id: F-023
+  title: Reminders (notification at block start, checkpoint, fallback)
+  practice: cues fire at the time (Gollwitzer)
+  status: planned
+  tests: []
+- id: F-024
+  title: Dock app and self-refresh (PWA install, launchd, update to `stable`)
+  practice: an application that refreshes itself
+  status: planned
+  tests: []
+  manual:
+    - "Chrome menu → Install Quickdo → icon appears in the Dock"
+    - "Reboot, log in, open the Dock app → todos are there"
+- id: F-025
+  title: Upcoming view (next 7 days + later)
+  practice: a schedule of things I want to do
+  status: planned
+  tests: []
+- id: F-026
+  title: Agent sync over GitHub (inbox ingest, rejected feedback, conflict-free)
+  practice: agent channel (docs/PLAN.md §6)
+  status: planned
+  tests: []
