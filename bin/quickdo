@@ -1,0 +1,235 @@
+#!/usr/bin/env node
+// Quickdo CLI. Plain Node ESM, no build step, no dependencies beyond node built-ins.
+// Talks to the local server on http://127.0.0.1:<port>/api/*  (docs/CONTRACTS.md §2, §5).
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { HELP, parseArgs, resolvePort } from './lib/args.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const CHECKOUT = resolve(HERE, '..');
+const LABEL = 'io.github.henrik253.quickdo';
+const HOME = process.env.QUICKDO_HOME || homedir();
+const CONFIG_DIR = join(HOME, '.config', 'quickdo');
+const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
+const SECRETS_FILE = join(CONFIG_DIR, 'secrets.json');
+const HEADERS = { 'Content-Type': 'application/json', 'X-Quickdo-Client': '1' };
+const TIMEOUT_MS = Number(process.env.QUICKDO_CLI_TIMEOUT_MS) || 10_000;
+
+function readConfig() {
+  try {
+    return JSON.parse(readFileSync(CONFIG_FILE, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function expandHome(p) {
+  return p.startsWith('~/') ? join(HOME, p.slice(2)) : p;
+}
+
+const args = parseArgs(process.argv.slice(2));
+const PORT = resolvePort(args.port, process.env, readConfig());
+const BASE = `http://127.0.0.1:${PORT}`;
+
+function die(msg, code = 1) {
+  process.stderr.write(`${msg}\n`);
+  process.exit(code);
+}
+
+function notRunning() {
+  die(
+    `Quickdo server is not running on 127.0.0.1:${PORT} — run 'quickdo install' or 'npm start'`,
+  );
+}
+
+async function api(method, path, body) {
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers: HEADERS,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch {
+    notRunning();
+  }
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = { error: text };
+  }
+  return { status: res.status, data };
+}
+
+function chips(parsed) {
+  const tokens = Array.isArray(parsed?.tokens) ? parsed.tokens : [];
+  return tokens.map((t) => `${t.kind}: ${t.value}`);
+}
+
+async function cmdCapture() {
+  if (!args.text) die(`nothing to capture\n\n${HELP}`, 2);
+  const body = { text: args.text, source: 'cli' };
+  if (args.today) body.target = 'today';
+  const { status, data } = await api('POST', '/api/capture', body);
+  if (status === 201 && data?.item) {
+    const where = data.item.scheduledFor ? data.item.scheduledFor : 'Backlog';
+    const line = [`+ ${data.item.title}`, `→ ${where}`];
+    const c = chips(data.parsed);
+    if (c.length) line.push(`[${c.join(' · ')}]`);
+    console.log(line.join('  '));
+    for (const w of data.parsed?.warnings ?? []) console.log(`  ! ${w}`);
+    return;
+  }
+  die(`capture failed (${status}): ${data?.error ?? data?.warning ?? 'unknown error'}`);
+}
+
+function printSync(sync) {
+  if (!sync || typeof sync !== 'object') {
+    console.log(JSON.stringify(sync));
+    return;
+  }
+  const rows = [
+    ['enabled', sync.enabled],
+    ['offline', sync.offline],
+    ['last sync', sync.lastSync ?? '—'],
+    ['last push', sync.lastPush ?? '—'],
+    ['pending commits', sync.pending ?? 0],
+    ['hermes last seen', sync.hermesLastSeen ?? '—'],
+    ['rejected files', sync.rejectedCount ?? 0],
+    ['conflict', sync.conflict ? `${sync.conflict.at} (${sync.conflict.branch})` : 'none'],
+    ['last error', sync.lastError ?? '—'],
+    ['cycles', sync.cycles ?? 0],
+  ];
+  for (const [k, v] of rows) console.log(`${k.padEnd(17)} ${v}`);
+}
+
+async function cmdStatus() {
+  const { status, data } = await api('GET', '/api/sync/status');
+  if (status !== 200) die(`status failed (${status}): ${data?.error ?? ''}`);
+  printSync(data?.sync ?? data);
+}
+
+async function cmdSync() {
+  const { status, data } = await api('POST', '/api/sync', {});
+  if (status !== 200) die(`sync failed (${status}): ${data?.error ?? ''}`);
+  printSync(data?.sync ?? data);
+}
+
+async function cmdOpen() {
+  const { status } = await api('GET', '/api/health');
+  if (status !== 200) notRunning();
+  const opener = process.platform === 'darwin' ? 'open' : 'xdg-open';
+  const child = spawn(opener, [BASE], { stdio: 'ignore', detached: true });
+  child.on('error', () => die(`could not run '${opener}'; open ${BASE} yourself`));
+  child.unref();
+  console.log(`opened ${BASE}`);
+}
+
+function runScript(name) {
+  const script = join(CHECKOUT, 'bin', name);
+  if (!existsSync(script)) die(`missing ${script}`);
+  const r = spawnSync('bash', [script, CHECKOUT], { stdio: 'inherit' });
+  process.exit(r.status ?? 1);
+}
+
+function which(bin) {
+  const r = spawnSync('sh', ['-c', `command -v ${bin}`], { encoding: 'utf8' });
+  return r.status === 0 ? r.stdout.trim() : null;
+}
+
+async function cmdDoctor() {
+  const checks = [];
+  const ok = (name, detail) => checks.push({ ok: true, name, detail });
+  const bad = (name, detail) => checks.push({ ok: false, name, detail });
+
+  for (const bin of ['node', 'git', 'gh']) {
+    const p = which(bin);
+    if (p) ok(`${bin} on PATH`, p);
+    else bad(`${bin} on PATH`, bin === 'gh' ? 'optional; brew install gh' : 'required');
+  }
+  const nodeVersion = process.versions.node;
+  if (Number(nodeVersion.split('.')[0]) >= 20) ok('node version', nodeVersion);
+  else bad('node version', `${nodeVersion} (need >= 20.19)`);
+
+  if (process.platform === 'darwin') {
+    const r = spawnSync('launchctl', ['print', `gui/${process.getuid()}/${LABEL}`], {
+      encoding: 'utf8',
+    });
+    if (r.status === 0) ok('launchd agent loaded', LABEL);
+    else bad('launchd agent loaded', `not loaded — run 'quickdo install'`);
+  }
+
+  try {
+    const res = await fetch(`${BASE}/api/health`, { signal: AbortSignal.timeout(3000) });
+    const j = await res.json().catch(() => ({}));
+    if (res.ok && j.ok) ok(`server on ${BASE}`, `version ${j.version ?? '?'}, up ${j.uptimeSec ?? '?'} s`);
+    else bad(`server on ${BASE}`, `HTTP ${res.status}`);
+  } catch {
+    bad(`server on ${BASE}`, `not answering — run 'quickdo install' or 'npm start'`);
+  }
+
+  const config = readConfig();
+  if (existsSync(CONFIG_FILE)) {
+    if (config) ok('config present', CONFIG_FILE);
+    else bad('config present', `${CONFIG_FILE} is not valid JSON`);
+  } else {
+    bad('config present', `${CONFIG_FILE} missing (defaults apply; copy config.example.json)`);
+  }
+
+  const dataDir = expandHome(process.env.QUICKDO_DATA_DIR || config?.dataDir || '~/quickdo-data');
+  if (existsSync(join(dataDir, '.git'))) {
+    const r = spawnSync('git', ['-C', dataDir, 'remote', 'get-url', 'origin'], { encoding: 'utf8' });
+    if (r.status === 0) ok('data dir is a git repo with origin', `${dataDir} → ${r.stdout.trim()}`);
+    else bad('data dir is a git repo with origin', `${dataDir} has no 'origin' remote`);
+  } else {
+    bad('data dir is a git repo with origin', `${dataDir} is not a git clone`);
+  }
+
+  if (existsSync(SECRETS_FILE)) {
+    const mode = statSync(SECRETS_FILE).mode & 0o777;
+    if (mode === 0o600) ok('secrets mode 600', SECRETS_FILE);
+    else bad('secrets mode 600', `${SECRETS_FILE} is ${mode.toString(8)} — chmod 600`);
+  } else {
+    ok('secrets mode 600', 'no secrets.json (fine until calendars are configured)');
+  }
+
+  const tcc = ['Documents', 'Desktop', 'Downloads'].map((d) => join(homedir(), d));
+  const inTcc = [CHECKOUT, dataDir].filter((p) => tcc.some((d) => p.startsWith(`${d}/`)));
+  if (inTcc.length === 0) ok('no checkout under ~/Documents|Desktop|Downloads', CHECKOUT);
+  else bad('no checkout under ~/Documents|Desktop|Downloads', `${inTcc.join(', ')} (launchd gets a silent TCC error there)`);
+
+  for (const c of checks) console.log(`${c.ok ? 'ok  ' : 'FAIL'} ${c.name}${c.detail ? ` — ${c.detail}` : ''}`);
+  const failed = checks.filter((c) => !c.ok).length;
+  console.log(failed === 0 ? 'all checks passed' : `${failed} check(s) failed`);
+  process.exit(failed === 0 ? 0 : 1);
+}
+
+async function main() {
+  if (args.error) die(`${args.error}\n\n${HELP}`, 2);
+  switch (args.command) {
+    case 'capture':
+      return cmdCapture();
+    case 'status':
+      return cmdStatus();
+    case 'sync':
+      return cmdSync();
+    case 'open':
+      return cmdOpen();
+    case 'doctor':
+      return cmdDoctor();
+    case 'install':
+      return runScript('install-launchd.sh');
+    case 'uninstall':
+      return runScript('uninstall-launchd.sh');
+    default:
+      process.stdout.write(HELP);
+  }
+}
+
+main().catch((e) => die(`quickdo: ${e?.message ?? e}`));

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Rendered by bin/install-launchd.sh; every __PLACEHOLDER__ is replaced with an absolute path. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>io.github.henrik253.quickdo</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__CHECKOUT__/bin/run.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__CHECKOUT__</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>__PATH__</string>
+    <key>QUICKDO_NODE</key>
+    <string>__NODE__</string>
+    <key>HOME</key>
+    <string>__HOME__</string>
+    <key>LANG</key>
+    <string>en_US.UTF-8</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart whenever the process exits (the server exits 75 to ask for a restart after an update). -->
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>ThrottleInterval</key>
+  <integer>5</integer>
+
+  <key>ProcessType</key>
+  <string>Interactive</string>
+
+  <key>StandardOutPath</key>
+  <string>__LOG_DIR__/quickdo.log</string>
+  <key>StandardErrorPath</key>
+  <string>__LOG_DIR__/quickdo.err.log</string>
+</dict>
+</plist>

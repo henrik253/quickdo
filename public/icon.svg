@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Quickdo</title>
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="#0f6e63"/>
+  <polyline points="136,268 226,356 384,176" fill="none" stroke="#ffffff" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
