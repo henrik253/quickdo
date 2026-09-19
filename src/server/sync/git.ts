@@ -27,6 +27,35 @@ export interface GitRunnerOptions {
   authorEmail: string;
 }
 
+/**
+ * simple-git refuses an explicit env that carries editor/pager/ssh hooks ("unsafe" plugin). Our
+ * env is the server's own trusted process env, not user input: hooks we never need (editor,
+ * pager, external diff, template dir) are dropped, the ones a user may rely on to reach origin
+ * (GIT_SSH_COMMAND, askpass, config paths, proxy) are allowed explicitly below.
+ */
+const DROPPED_ENV = new Set([
+  'EDITOR',
+  'GIT_EDITOR',
+  'GIT_SEQUENCE_EDITOR',
+  'PAGER',
+  'GIT_PAGER',
+  'GIT_EXTERNAL_DIFF',
+  'GIT_TEMPLATE_DIR',
+  'GIT_DIR',
+  'GIT_WORK_TREE',
+  'PREFIX',
+]);
+
+function childEnv(): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value === undefined || DROPPED_ENV.has(key.toUpperCase())) continue;
+    env[key] = value;
+  }
+  env.GIT_TERMINAL_PROMPT = '0';
+  return env;
+}
+
 export function createGitRunner(dataDir: string, opts: GitRunnerOptions): GitRunner {
   const git = simpleGit({
     baseDir: dataDir,
@@ -35,7 +64,14 @@ export function createGitRunner(dataDir: string, opts: GitRunnerOptions): GitRun
     trimmed: false,
     timeout: { block: opts.timeoutMs },
     config: [`user.name=${opts.authorName}`, `user.email=${opts.authorEmail}`],
-  }).env({ ...process.env, GIT_TERMINAL_PROMPT: '0' });
+    unsafe: {
+      allowUnsafeSshCommand: true,
+      allowUnsafeAskPass: true,
+      allowUnsafeConfigPaths: true,
+      allowUnsafeConfigEnvCount: true,
+      allowUnsafeGitProxy: true,
+    },
+  }).env(childEnv());
 
   async function run(args: string[]): Promise<string> {
     try {
