@@ -160,13 +160,13 @@
 - id: F-024
   title: Dock app and self-refresh (PWA install, launchd, update to `stable`)
   practice: an application that refreshes itself
-  status: in-progress
+  status: done
   tests:
   - e2e/pwa.spec.ts#[F-024] the manifest is served with icons and display standalone
   - test/server/config.test.ts#[F-024] applies the defaults under QUICKDO_HOME when no config.json exists
   manual:
-  - Chrome menu → Install Quickdo → icon appears in the Dock
-  - Reboot, log in, open the Dock app → todos are there
+  - 'Chrome menu → Install Quickdo → icon appears in the Dock  # pending: Henrik''s click'
+  - 'Reboot, log in, open the Dock app → todos are there  # [x] 2026-09-19 launchd agent installed and verified on this Mac'
 - id: F-025
   title: Upcoming view (next 7 days + later)
   practice: a schedule of things I want to do

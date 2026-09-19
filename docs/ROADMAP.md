@@ -11,7 +11,8 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
   `npm run check` clean. `features.yaml`: 17 done, 8 in progress, 1 planned (see `docs/ACCEPTANCE.md`).
 - Repos: `henrik253/quickdo` (public, code) and `henrik253/quickdo-data` (private, data) created 2026-09-19; the agent
   contract (`README.md`) and `schema/*.schema.json` are published in the data repo.
-- Next: install on this Mac as the Dock app (M0b last item), verify a real Hermes inbox round-trip, then M2 (ICS) and M3.
+- Installed on this Mac as a launchd agent and verified end to end (CLI capture → push; Hermes inbox → ingest). CI green,
+  `release` job moves `stable`. Next: Chrome install (Henrik), Hermes PAT, then M2 (ICS) and M3.
 
 ## M0a — Capture works in the browser
 
@@ -62,7 +63,9 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 - [x] `docs/SETUP.md`, `docs/shortcuts/README.md` (recipe written from the documented Shortcuts actions; not yet verified in
       Shortcuts.app — F-003 manual item).
 - [x] Icons: `public/icon.svg` + `public/icons/{192,512,maskable-512}.png` from `scripts/make-icons.mjs` (pure-Node PNG encoder).
-- [~] Production checkout `~/quickdo` on `stable`, data clone `~/quickdo-data` (done), launchd agent installed on this Mac.
+- [x] Production checkout `~/quickdo` on `stable`, data clone `~/quickdo-data`, launchd agent `io.github.henrik253.quickdo`
+      installed 2026-09-19 (`bin/install-launchd.sh`); `run.sh` rebuilt on first start and the server answered on
+      `127.0.0.1:7777`. Chrome "Install app" is Henrik's click.
 
 ## M1 — The agent can write
 
@@ -74,7 +77,11 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
       recovery marker; server-side push rejections only set `lastError`.
 - [x] `docs/AGENT.md` = data-repo `README.md` + `schema/*.schema.json` published (2026-09-19).
 - [x] Web: `SyncBadge` states, agent toast, `suggestedFor` chip (`a`), "hermes ↗" link.
-- [ ] Verify one real Hermes round-trip on the live data repo (inbox file → item in the app within 60 s; malformed file → `rejected/`).
+- [x] Verified 2026-09-19 on the live data repo: a CLI capture was committed and pushed (`ui: N change(s)`); an inbox file
+      PUT through the Contents API was ingested on the next cycle (`ingest: 1 from hermes (0 rejected)`), removed from
+      `inbox/` on origin, and shown in the app with the suggestion chip. Malformed-file path covered by tests only.
+- [ ] Henrik: create the fine-grained PAT for Hermes (Contents: read & write on `quickdo-data`) and point Hermes at the
+      knowledge-vault note.
 - [x] Privacy guards: `scripts/check-no-pii.sh` (patterns built from fragments; lines containing `check-no-pii` or `pii:allow`
       are exempt because the docs quote the patterns; optional `~/.config/quickdo/pii-denylist.txt`), `scripts/check-no-pii.test.sh`
       (10 cases), gitleaks in CI.
@@ -110,6 +117,8 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 
 - 2026-09-19: Vitest 4.1 chosen over 3.x (3.x lacks Vite 7 support in its peer range). Vite 7 needs Node ≥ 20.19 — satisfied.
 - 2026-09-19: `day.json` (DayState) lives in the local state dir, not the data repo; it is per-machine.
+- 2026-09-19: the plan assumed Europe/Berlin, but this Mac runs on US Central time; `~/.config/quickdo/config.json`
+  now sets `timezone: America/Chicago`. All day logic follows the configured zone, so nothing else changed.
 
 ## Known gaps / open questions
 
@@ -121,5 +130,5 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 - The macOS Shortcut recipe is unverified in Shortcuts.app (F-003 manual item).
 
 - Open questions from `docs/PLAN.md` §12 answered by assumption for v0.1: repo names `quickdo`/`quickdo-data`,
-  Europe/Berlin 08:00–22:00, capture defaults to Backlog, Chrome as install host, Hermes may mark items done with
+  America/Chicago (corrected from the plan's Europe/Berlin) 08:00–22:00, capture defaults to Backlog, Chrome as install host, Hermes may mark items done with
   `baseUpdatedAt`, Node 20.19 kept.
