@@ -1,0 +1,15 @@
+{
+  "v": 1,
+  "op": "add",
+  "by": "hermes",
+  "at": "2026-09-18T07:03:00Z",
+  "item": {
+    "title": "Reply to alice about the meeting slot",
+    "estimateMin": 10,
+    "due": "2026-09-19",
+    "suggestedFor": "2026-09-18",
+    "tags": ["mail"],
+    "ref": "https://example.com/issues/1",
+    "dedupeKey": "issue-1-reply"
+  }
+}
