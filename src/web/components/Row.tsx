@@ -254,18 +254,21 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         )}
         {extra}
       </span>
-      {!isDone && item.repeat === undefined && (
+      {item.repeat === undefined && (
         <button
           type="button"
           className="remove"
           data-testid={T.rowRemove}
-          aria-label={`remove "${item.title}"`}
-          title="remove from the list (d)"
+          data-action={isDone ? 'archive' : 'drop'}
+          aria-label={isDone ? `clear "${item.title}" from the list` : `remove "${item.title}"`}
+          title={
+            isDone ? 'clear from the list (stays in the done tracker)' : 'remove from the list (d)'
+          }
           onMouseDown={(e) => e.preventDefault()} // keep the capture bar focused
           onClick={(e) => {
             e.stopPropagation();
-            showToast(`removed "${item.title}"`);
-            void rowAction(item.id, 'drop');
+            showToast(isDone ? `cleared "${item.title}"` : `removed "${item.title}"`);
+            void rowAction(item.id, isDone ? 'archive' : 'drop');
           }}
         >
           ✕

@@ -79,6 +79,8 @@ export interface Store {
   patch(id: string, patch: EditablePatch): Promise<void>;
   shiftBlock(id: string, minutes: number): Promise<void>;
   freshStart(): Promise<void>;
+  /** Archive every done item (they stay in the history / done tracker). */
+  clearDone(): Promise<void>;
   forceSync(): Promise<void>;
   connect(): void;
   disconnect(): void;
@@ -183,6 +185,8 @@ function rowActionToDomain(
       return { domain: { type: 'skip', id }, api: 'skip' };
     case 'drop':
       return { domain: { type: 'drop', id }, api: 'drop' };
+    case 'archive':
+      return { domain: { type: 'archive', ids: [id] }, api: 'archive' };
     case 'start':
     case 'twoMinute':
       return { domain: { type: 'start', id }, api: 'start' };
@@ -404,6 +408,23 @@ export const useStore = create<Store>()((set, get) => ({
     } catch (err) {
       set({ state: s });
       get().showToast(`shift failed: ${(err as Error).message}`, 'warn');
+    }
+  },
+
+  async clearDone() {
+    const s = get().state;
+    if (!s) return;
+    const { next } = optimistic(s, get().receivedAt, { type: 'archive' });
+    set({ state: next });
+    try {
+      const res = await api.clearDone();
+      get().applyState(res.state);
+      get().showToast(
+        `${res.archived} done item${res.archived === 1 ? '' : 's'} cleared — still counted in the tracker`,
+      );
+    } catch (err) {
+      set({ state: s });
+      get().showToast(`clear done failed: ${(err as Error).message}`, 'warn');
     }
   },
 

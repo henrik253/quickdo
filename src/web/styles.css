@@ -570,3 +570,112 @@ section h2.amber {
   opacity: 0.7;
   font-style: italic;
 }
+
+/* ---------- done tracker ---------- */
+.done-chart {
+  margin: 18px 0 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--rule, #d9ddd7);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.done-chart .head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.done-chart .head h2 {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.done-chart .total {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.done-chart .ranges {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid var(--rule, #d9ddd7);
+  border-radius: 6px;
+  padding: 2px;
+}
+.done-chart .ranges button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.done-chart .ranges button[aria-pressed="true"] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.done-chart .bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 3px;
+  height: 64px;
+}
+.done-chart .bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  min-width: 0;
+}
+.done-chart .bar .fill {
+  width: 100%;
+  max-width: 28px;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: var(--accent, #0f6e63);
+  opacity: 0.85;
+}
+.done-chart .bar[data-done="0"] .fill {
+  opacity: 0.18;
+}
+.done-chart .bar .n {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.2;
+}
+.done-chart .labels {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 3px;
+  margin-top: 4px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-align: center;
+  overflow: hidden;
+}
+.done-chart .labels span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+.link-button {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  margin-left: 10px;
+  padding: 0 2px;
+}
+.link-button:hover {
+  color: var(--text);
+}

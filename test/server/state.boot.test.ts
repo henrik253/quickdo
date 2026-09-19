@@ -137,7 +137,7 @@ describe('state boot', () => {
     expect(state.items.find((i) => i.id === created.id)?.scheduledFor).toBeUndefined();
   });
 
-  it('[F-018] loads this month and last month of history so habits know doneToday', async () => {
+  it('[F-018] loads the last four months of history so habits and the done tracker know past days', async () => {
     const home = await makeSandbox({ noLoad: true });
     sb = home;
     mkdirSync(join(sb.dataDir, 'history'), { recursive: true });
@@ -187,7 +187,13 @@ describe('state boot', () => {
       }),
     );
     await sb.store.load();
-    expect(sb.store.recentHistory().map((e) => e.day)).toEqual(['2026-08-31', TODAY, YESTERDAY]);
+    // July (three months back) is loaded too; June would not be
+    expect(sb.store.recentHistory().map((e) => e.day)).toEqual([
+      '2026-07-31',
+      '2026-08-31',
+      TODAY,
+      YESTERDAY,
+    ]);
     const state = await sb.state();
     const habits = new Map(state.derived.habits.map((h) => [h.item.id, h]));
     expect(habits.get('01HABIT0000000000000000001')?.doneToday).toBe(true);

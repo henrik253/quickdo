@@ -6,11 +6,13 @@ import type {
   CaptureTarget,
   DayState,
   Derived,
+  DoneStats,
   EditablePatch,
   Item,
   Schedule,
   Settings,
   SourceKind,
+  StatsRange,
 } from '../domain/types';
 import type { SyncStatus } from '../server/sync/types';
 
@@ -49,7 +51,8 @@ export type ItemAction =
   | 'backlog'
   | 'next'
   | 'accept'
-  | 'clearBlock';
+  | 'clearBlock'
+  | 'archive';
 
 export class ApiError extends Error {
   status: number;
@@ -105,6 +108,8 @@ export const api = {
   patchItem: (id: string, patch: EditablePatch) =>
     request<StateResult>('PATCH', `/api/items/${encodeURIComponent(id)}`, patch),
   freshStart: () => request<StateResult>('POST', '/api/day/freshStart'),
+  clearDone: () => request<StateResult & { archived: number }>('POST', '/api/day/clearDone'),
+  stats: (range: StatsRange) => request<DoneStats>('GET', `/api/stats?range=${range}`),
   commit: (ids: string[], cues: Record<string, string>) =>
     request<StateResult>('POST', '/api/day/commit', { ids, cues }),
   sync: () => request<{ sync: SyncStatus }>('POST', '/api/sync'),

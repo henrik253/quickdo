@@ -248,7 +248,8 @@ export type Action =
   | { type: 'freshStart' }
   | { type: 'rollover' } // uses clock date; open dated items from earlier days -> Backlog
   | { type: 'commitEvening'; ids: string[]; cues: Record<string, string> }
-  | { type: 'ingest'; command: InboxCommand; file: string };
+  | { type: 'ingest'; command: InboxCommand; file: string }
+  | { type: 'archive'; ids?: string[] }; // move done items out of todos.json (all done items when ids is omitted)
 
 export interface ReduceResult {
   state: State;
@@ -258,6 +259,30 @@ export interface ReduceResult {
   warning?: string;
   /** The item created or primarily affected, when there is one. */
   item?: Item;
+  /** Items removed from todos by `archive`; the server appends them to archive/YYYY-MM.json. */
+  archived?: Item[];
+}
+
+// ---------- done tracker (src/domain/state/stats.ts) ----------
+
+export type StatsRange = '3d' | '7d' | '1m' | '3m';
+
+export interface StatsBucket {
+  start: ISODate; // first day of the bucket
+  end: ISODate; // last day of the bucket (inclusive)
+  label: string; // e.g. "Mon", "18", "W38"
+  done: number;
+}
+
+export interface DoneStats {
+  range: StatsRange;
+  unit: 'day' | 'week';
+  from: ISODate;
+  to: ISODate;
+  buckets: StatsBucket[];
+  total: number;
+  best: number; // max bucket value, for scaling
+  perDay: number; // total / days in range, one decimal
 }
 
 // ---------- Agent inbox commands (docs/AGENT.md) ----------

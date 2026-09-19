@@ -36,4 +36,9 @@ export const T = {
   toastChip: 'toast-chip',
   updatePill: 'update-pill',
   problems: 'problems',
+  clearDone: 'clear-done',
+  doneChart: 'done-chart',
+  doneRange: 'done-range',
+  doneBucket: 'done-bucket',
+  doneTotal: 'done-total',
 } as const;

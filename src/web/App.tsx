@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { api } from './api';
 import { Backlog } from './components/Backlog';
 import { CaptureBar } from './components/CaptureBar';
+import { DoneChart } from './components/DoneChart';
 import { HabitsStrip } from './components/HabitsStrip';
 import { KeyHelp } from './components/KeyHelp';
 import { ProgressBar } from './components/ProgressBar';
@@ -148,6 +149,7 @@ export function App() {
         <div className="col-main">
           {state && <ProgressBar progress={state.derived.progress} />}
           <TodayList />
+          <DoneChart />
           <HabitsStrip />
           {view === 'backlog' ? <Backlog /> : <Upcoming />}
         </div>

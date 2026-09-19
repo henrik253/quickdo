@@ -826,3 +826,53 @@ describe('reducer: ingest', () => {
     expect(r.state.todos.items).toEqual(state.todos.items);
   });
 });
+
+describe('archive', () => {
+  it('[F-030] archives every done non-repeat item, leaves the rest, and records history', () => {
+    const doneA = {
+      ...item({ id: 'A', title: 'done A' }),
+      status: 'done' as const,
+      completedAt: '2026-09-18T09:12:00+02:00',
+    };
+    const openB = item({ id: 'B', title: 'open B' });
+    const habit = {
+      ...item({ id: 'H', title: 'habit', repeat: 'daily' as const }),
+      status: 'open' as const,
+    };
+    const doneC = {
+      ...item({ id: 'C', title: 'done C' }),
+      status: 'done' as const,
+      completedAt: '2026-09-18T09:12:00+02:00',
+    };
+    const state = stateWith([doneA, openB, habit, doneC]);
+    const r = reduce(state, { type: 'archive' }, clock, settings);
+    expect(r.changed).toBe(true);
+    expect(r.archived?.map((i) => i.id)).toEqual(['A', 'C']);
+    expect(r.state.todos.items.map((i) => i.id)).toEqual(['B', 'H']);
+    expect(r.events.filter((e) => e.type === 'archived').map((e) => e.itemId)).toEqual(['A', 'C']);
+    expect(state.todos.items).toHaveLength(4); // input untouched
+  });
+
+  it('[F-030] archive with ids only takes those items, and refuses items that are not done', () => {
+    const doneA = {
+      ...item({ id: 'A' }),
+      status: 'done' as const,
+      completedAt: '2026-09-18T09:12:00+02:00',
+    };
+    const doneC = {
+      ...item({ id: 'C' }),
+      status: 'done' as const,
+      completedAt: '2026-09-18T09:12:00+02:00',
+    };
+    const openB = item({ id: 'B' });
+    const state = stateWith([doneA, openB, doneC]);
+    const one = reduce(state, { type: 'archive', ids: ['C'] }, clock, settings);
+    expect(one.archived?.map((i) => i.id)).toEqual(['C']);
+    expect(one.state.todos.items.map((i) => i.id)).toEqual(['A', 'B']);
+    const refused = reduce(state, { type: 'archive', ids: ['B'] }, clock, settings);
+    expect(refused.changed).toBe(false);
+    expect(refused.warning).toBe('not done');
+    const nothing = reduce(stateWith([openB]), { type: 'archive' }, clock, settings);
+    expect(nothing.warning).toBe('nothing to archive');
+  });
+});

@@ -245,7 +245,7 @@ describe('TodayList', () => {
     expect(chips[0].textContent).toContain('formatting');
   });
 
-  it('[F-027] done rows have no ✕ button', () => {
+  it('[F-027] open rows offer drop, done rows offer archive via the ✕', () => {
     seedStore(
       makeState([
         todayItem({ id: 'A', title: 'Read paper X' }),
@@ -258,7 +258,65 @@ describe('TodayList', () => {
       ]),
     );
     render(<TodayList />);
-    expect(screen.getAllByTestId(T.rowRemove)).toHaveLength(1);
-    expect(within(screen.getByTestId(T.doneSection)).queryByTestId(T.rowRemove)).toBeNull();
+    const buttons = screen.getAllByTestId(T.rowRemove);
+    expect(buttons).toHaveLength(2);
+    const doneRow = within(screen.getByTestId(T.doneSection)).getByTestId(T.todayRow);
+    expect(within(doneRow).getByTestId(T.rowRemove).dataset.action).toBe('archive');
+    const openRow = within(screen.getByTestId(T.todayList)).getByTestId(T.todayRow);
+    expect(within(openRow).getByTestId(T.rowRemove).dataset.action).toBe('drop');
+  });
+
+  it('[F-030] "clear done" and the ✕ on a done row archive instead of dropping', async () => {
+    const fetchSpy = mockFetch(() => jsonResponse({ state: makeState([]) }));
+    seedStore(
+      makeState([
+        todayItem({ id: 'A', title: 'Read paper X' }),
+        todayItem({
+          id: 'B',
+          title: 'Done thing',
+          status: 'done',
+          completedAt: '2026-09-18T08:00:00+02:00',
+        }),
+      ]),
+    );
+    render(<TodayList />);
+    const doneRow = within(screen.getByTestId(T.doneSection)).getByTestId(T.todayRow);
+    fireEvent.click(within(doneRow).getByTestId(T.rowRemove));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/items/B/archive',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(screen.queryByTestId(T.doneSection)).toBeNull(); // optimistic: the done section is empty now
+    await act(async () => {
+      await Promise.resolve();
+    });
+  });
+
+  it('[F-030] the "clear done" button archives every done item', async () => {
+    const fetchSpy = mockFetch((url) => {
+      if (String(url).includes('/api/day/clearDone'))
+        return jsonResponse({ state: makeState([]), archived: 1 });
+      return jsonResponse({ state: makeState([]) });
+    });
+    seedStore(
+      makeState([
+        todayItem({
+          id: 'B',
+          title: 'Done thing',
+          status: 'done',
+          completedAt: '2026-09-18T08:00:00+02:00',
+        }),
+      ]),
+    );
+    render(<TodayList />);
+    fireEvent.click(screen.getByTestId(T.clearDone));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/day/clearDone',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(screen.queryByTestId(T.doneSection)).toBeNull();
+    await act(async () => {
+      await Promise.resolve();
+    });
   });
 });

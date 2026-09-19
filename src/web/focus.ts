@@ -40,7 +40,8 @@ export type RowAction =
   | 'fallback'
   | 'accept'
   | 'drop'
-  | 'extend';
+  | 'extend'
+  | 'archive';
 
 export type InlineKind = 'edit' | 'reschedule' | 'block' | 'cue';
 

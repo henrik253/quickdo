@@ -16,24 +16,27 @@ import {
   renameSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 import { DayStateSchema, HistoryEventSchema, migrateTodos, ScheduleSchema } from '../domain/schema';
 import { derive } from '../domain/state/derive';
 import { defaultSchedule, emptyDay, emptyTodos } from '../domain/state/initial';
 import { reduce } from '../domain/state/reducer';
+import { buildStats } from '../domain/state/stats';
 import { addDays, todayISO } from '../domain/time';
 import type {
   Action,
   Clock,
   DayState,
   Derived,
+  DoneStats,
   HistoryEvent,
   Item,
   ReduceResult,
   Schedule,
   Settings,
   State,
+  StatsRange,
   TodosFile,
 } from '../domain/types';
 import type { Broadcaster } from './broadcast';
@@ -96,6 +99,8 @@ export interface Store extends SyncHost {
   /** Epoch ms of the last user-driven mutation (not ingest), or null. */
   lastMutationAt(): number | null;
   recentHistory(): HistoryEvent[];
+  /** Done tracker over the loaded history (last four months). */
+  stats(range: StatsRange): DoneStats;
 }
 
 export const DISABLED_SYNC: SyncStatus = {
@@ -262,9 +267,13 @@ export function createStore(deps: StoreDeps): Store {
 
   function loadHistory(): void {
     const today = todayISO(clock);
-    const thisMonth = monthOf(today);
-    const lastMonth = monthOf(addDays(`${thisMonth}-01`, -1));
-    historyMonths = [lastMonth, thisMonth];
+    // this month and the three before it: enough for the 3-month done tracker
+    historyMonths = [];
+    let month = monthOf(today);
+    for (let i = 0; i < 4; i++) {
+      historyMonths.unshift(month);
+      month = monthOf(addDays(`${month}-01`, -1));
+    }
     const events: HistoryEvent[] = [];
     let skipped = 0;
     for (const month of historyMonths) {
@@ -330,11 +339,30 @@ export function createStore(deps: StoreDeps): Store {
     state = result.state;
     if (result.events.length > 0) appendHistory(result.events);
     if (state.todos !== before.todos) writeTodos(state.todos);
+    if (result.archived && result.archived.length > 0) writeArchive(result.archived);
     if (JSON.stringify(state.day) !== JSON.stringify(before.day)) writeDay(state.day);
     if (state.schedule !== before.schedule) writeSchedule(state.schedule);
     if (userDriven) lastMutation = Date.now();
     if (opts.notifySync !== false) sync?.notifyLocalChange();
     broadcaster.broadcast('state', stateResponse());
+  }
+
+  /** Append archived items to archive/YYYY-MM.json (Mac-owned, committed by the sync module). */
+  function writeArchive(items: Item[]): void {
+    const rel = `archive/${monthOf(todayISO(clock))}.json`;
+    const path = join(dataDir, rel);
+    mkdirSync(dirname(path), { recursive: true });
+    let existing: unknown[] = [];
+    if (existsSync(path)) {
+      try {
+        const parsed = JSON.parse(readFileSync(path, 'utf8'));
+        if (Array.isArray(parsed)) existing = parsed;
+      } catch {
+        log('warn', 'archive file unreadable; starting a new list', { file: rel });
+      }
+    }
+    writeAtomic(path, toJsonFile([...existing, ...items]));
+    dirty.add(rel);
   }
 
   function dispatch(action: Action, opts: DispatchOptions = {}): ReduceResult {
@@ -476,6 +504,7 @@ export function createStore(deps: StoreDeps): Store {
     problems: () => problems,
     lastMutationAt: () => lastMutation,
     recentHistory: () => history,
+    stats: (range) => buildStats(history, todayISO(clock), range),
     reloadFromDisk,
     ingest,
     flush,

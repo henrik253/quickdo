@@ -8,6 +8,7 @@ import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
 import { parseCapture } from '../domain/capture/parseCapture';
 import { ItemSchema, ScheduleSchema } from '../domain/schema';
+import { isStatsRange, STATS_RANGES } from '../domain/state/stats';
 import { addDays, todayISO, toInstant } from '../domain/time';
 import type {
   Action,
@@ -57,6 +58,7 @@ const ITEM_ACTIONS = [
   'next',
   'accept',
   'clearBlock',
+  'archive',
 ] as const;
 export type ItemActionName = (typeof ITEM_ACTIONS)[number];
 
@@ -171,6 +173,8 @@ export function createApp(deps: AppDeps): Hono {
         return { type: 'nextSlot', id };
       case 'extend':
         return minutes === undefined ? { type: 'extend', id } : { type: 'extend', id, minutes };
+      case 'archive':
+        return { type: 'archive', ids: [id] };
       default:
         return { type: action, id };
     }
@@ -344,6 +348,21 @@ export function createApp(deps: AppDeps): Hono {
   });
 
   // ---------- day ----------
+
+  /** Move every done item out of the list; history keeps counting them (done tracker). */
+  app.post('/api/day/clearDone', async (c) => {
+    const result = store.dispatch({ type: 'archive' });
+    if (!result.changed)
+      return c.json({ warning: result.warning ?? 'nothing to archive', state: state() }, 409);
+    return c.json({ state: state(), archived: result.archived?.length ?? 0 });
+  });
+
+  app.get('/api/stats', (c) => {
+    const range = c.req.query('range') ?? '7d';
+    if (!isStatsRange(range))
+      return c.json({ error: `range must be one of ${STATS_RANGES.join(', ')}` }, 400);
+    return c.json(store.stats(range));
+  });
 
   app.post('/api/day/freshStart', async (c) => {
     await readJson(c);

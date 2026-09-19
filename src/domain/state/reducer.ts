@@ -608,6 +608,24 @@ function ingest(ctx: Ctx, command: InboxCommand, file: string): ReduceResult {
   }
 }
 
+function archive(ctx: Ctx, ids?: string[]): ReduceResult {
+  const wanted = ids ? new Set(ids) : null;
+  const archived: Item[] = [];
+  const keep: Item[] = [];
+  for (const item of ctx.state.todos.items) {
+    const chosen = wanted ? wanted.has(item.id) : true;
+    if (chosen && item.status === 'done' && item.repeat === undefined) archived.push(item);
+    else keep.push(item);
+  }
+  if (archived.length === 0) return fail(ctx.state, wanted ? 'not done' : 'nothing to archive');
+  ctx.state.todos.items = keep;
+  for (const item of archived)
+    emit(ctx, 'archived', { itemId: item.id, detail: item.title.slice(0, 80) });
+  const result = ok(ctx);
+  result.archived = archived;
+  return result;
+}
+
 // ---------- entry point ----------
 
 export function reduce(
@@ -667,5 +685,7 @@ function run(ctx: Ctx, action: Action): ReduceResult {
       return commitEvening(ctx, action.ids, action.cues);
     case 'ingest':
       return ingest(ctx, action.command, action.file);
+    case 'archive':
+      return archive(ctx, action.ids);
   }
 }

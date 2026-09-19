@@ -4,6 +4,7 @@ import { Row } from './Row';
 
 export function TodayList() {
   const state = useStore((s) => s.state);
+  const clearDone = useStore((s) => s.clearDone);
   if (!state) return null;
   const { derived, rolloverCount } = state;
   const n = derived.today.length;
@@ -42,7 +43,19 @@ export function TodayList() {
       </ul>
       {derived.doneToday.length > 0 && (
         <>
-          <h2 style={{ marginTop: 10 }}>done · {derived.doneToday.length}</h2>
+          <h2 style={{ marginTop: 10 }}>
+            <span>done · {derived.doneToday.length}</span>
+            <button
+              type="button"
+              className="link-button"
+              data-testid={T.clearDone}
+              title="move every done item out of the list; the tracker keeps counting them"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => void clearDone()}
+            >
+              clear done
+            </button>
+          </h2>
           <ul className="rows" data-testid={T.doneSection}>
             {derived.doneToday.map((item) => (
               <Row key={item.id} item={item} testId={T.todayRow} />

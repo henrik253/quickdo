@@ -35,6 +35,18 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
       computed (the tips use it); anchors/blocks still work via `@`, `[`, `]`, `+`. F-010 back to planned, F-009/F-012
       re-titled in `features.yaml`.
 
+## v0.3 — Done tracking (2026-09-19)
+
+- [x] **Done tracker** (F-029): `DoneChart` under the progress bar shows finished items per day (3 days / 7 days /
+      1 month) or per week (3 months, 13 bars ending today); the range buttons are remembered in `localStorage`.
+      Source: `GET /api/stats?range=` → `buildStats()` in `src/domain/state/stats.ts`, which nets `done`/`undone`
+      history events per item and day — so items cleared from the list still count. The store now loads the last four
+      months of `history/*.jsonl`. (Henrik wrote "7w"; implemented as 7 days.)
+- [x] **Clear done** (F-030): "clear done" in the done header and the ✕ on done rows dispatch the new reducer action
+      `archive` (all done non-repeat items, or one id); the server appends them to `archive/YYYY-MM.json` in the data
+      repo (Mac-owned, synced) and they leave `todos.json`. Routes: `POST /api/day/clearDone`,
+      `POST /api/items/:id/archive`. No automatic Sunday archive yet (M3).
+
 ## M0a — Capture works in the browser
 
 - [x] Repos created on GitHub (2026-09-19).
