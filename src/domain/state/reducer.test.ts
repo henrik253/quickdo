@@ -10,7 +10,7 @@ import {
   TOMORROW,
   YESTERDAY,
 } from '../testing/fixtures';
-import type { Action, InboxCommand, Item, State } from '../types';
+import type { Action, InboxAddItem, InboxCommand, Item, State } from '../types';
 import { newId, reduce } from './reducer';
 
 const NOW = '2026-09-18T09:12:00+02:00';
@@ -659,7 +659,7 @@ describe('reducer: day-level actions', () => {
 
 describe('reducer: ingest', () => {
   const at = '2026-09-18T07:03:00Z';
-  const addCmd = (over: Partial<InboxCommand & { op: 'add' }>['item'] = {}): InboxCommand => ({
+  const addCmd = (over: Partial<InboxAddItem> = {}): InboxCommand => ({
     v: 1,
     op: 'add',
     by: 'hermes',
