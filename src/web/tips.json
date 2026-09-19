@@ -1,0 +1,158 @@
+[
+  {
+    "text": "Write it down the moment it shows up. An open loop on paper stops nagging.",
+    "practice": "Capture everything",
+    "source": "Allen 2001, Getting Things Done",
+    "group": "planning"
+  },
+  {
+    "text": "A concrete plan for a task removes its intrusion into other work — you do not need to finish it, only to decide when.",
+    "practice": "Concrete plans quiet open tasks",
+    "source": "Masicampo & Baumeister 2011",
+    "group": "planning"
+  },
+  {
+    "text": "Keep Today tiny. Three to five items you will actually finish beat twelve you will carry over.",
+    "practice": "Tiny daily list",
+    "source": "Allen 2001; Bailey 2016",
+    "group": "planning"
+  },
+  {
+    "text": "Your estimate is optimistic — everyone's is. That is why every estimate is shown padded.",
+    "practice": "Planning fallacy",
+    "source": "Buehler, Griffin & Ross 1994",
+    "group": "planning"
+  },
+  {
+    "text": "Plan only the next step, not the whole project. The master list keeps the rest safe.",
+    "practice": "Separate the backlog from the daily commitment",
+    "source": "Allen 2001",
+    "group": "planning"
+  },
+  {
+    "text": "Give a task a time and a place (`@9`, `when I sit at the desk`) and it is far more likely to happen.",
+    "practice": "Implementation intentions",
+    "source": "Gollwitzer & Sheeran 2006",
+    "group": "planning"
+  },
+  {
+    "text": "Decide tonight what tomorrow starts with. The morning then has no decision to make.",
+    "practice": "Evening if-then planning",
+    "source": "Gollwitzer 1999",
+    "group": "planning"
+  },
+  {
+    "text": "Estimates above 90 minutes hide several tasks. Split them and each part gets a real chance.",
+    "practice": "Split long tasks",
+    "source": "Buehler, Griffin & Ross 1994",
+    "group": "planning"
+  },
+  {
+    "text": "A calendar has capacity; a list does not. If it does not fit between the anchors, it does not fit.",
+    "practice": "Time-blocking",
+    "source": "Newport 2016, Deep Work",
+    "group": "capacity"
+  },
+  {
+    "text": "Leave one to two hours of slack. The day always brings something you did not plan.",
+    "practice": "Slack band",
+    "source": "DeMarco 2001, Slack",
+    "group": "capacity"
+  },
+  {
+    "text": "Over capacity? Move one item to tomorrow now, while it is a choice and not a slip.",
+    "practice": "Soft cap on Today",
+    "source": "Bailey 2016, The Productivity Project",
+    "group": "capacity"
+  },
+  {
+    "text": "Fixed anchors, flexible content: the lecture does not move, the reading does.",
+    "practice": "Anchors and flexible blocks",
+    "source": "Polivy & Herman 2002",
+    "group": "capacity"
+  },
+  {
+    "text": "Halfway through a long block, check: on track? An intermediate deadline works better than a final one.",
+    "practice": "Checkpoints",
+    "source": "Ariely & Wertenbroch 2002",
+    "group": "capacity"
+  },
+  {
+    "text": "One block slipped? Move only the next one. Re-planning the whole day is how days get lost.",
+    "practice": "Move only the next block",
+    "source": "Polivy & Herman 2002",
+    "group": "slip"
+  },
+  {
+    "text": "Skipped. One miss changes nothing; the next block is what counts.",
+    "practice": "Self-forgiveness",
+    "source": "Wohl, Pychyl & Bennett 2010",
+    "group": "slip"
+  },
+  {
+    "text": "Being kind to yourself after a slip predicts less procrastination next time, not more.",
+    "practice": "Self-compassion",
+    "source": "Sirois 2014",
+    "group": "slip"
+  },
+  {
+    "text": "Press `.` for a fresh start: the afternoon, tomorrow or Monday is a clean slate. Use it.",
+    "practice": "Fresh-start effect",
+    "source": "Dai, Milkman & Riis 2014",
+    "group": "slip"
+  },
+  {
+    "text": "Two minutes on the task beats twenty minutes of planning it. Press `2` and begin.",
+    "practice": "Behavioural activation",
+    "source": "Jacobson et al. 1996; Fogg 2019",
+    "group": "slip"
+  },
+  {
+    "text": "A fallback decided in advance (\"15 minutes at 16:00\") turns a missed block into a smaller win.",
+    "practice": "Pre-planned fallback",
+    "source": "Gollwitzer & Sheeran 2006",
+    "group": "slip"
+  },
+  {
+    "text": "Never miss twice. One miss is noise; two starts a new pattern.",
+    "practice": "Never miss twice",
+    "source": "Clear 2018, Atomic Habits",
+    "group": "habit"
+  },
+  {
+    "text": "Missing one day did not hurt the habit. The two-minute version today keeps the chain intact.",
+    "practice": "Missing once does not break a habit",
+    "source": "Lally et al. 2010",
+    "group": "habit"
+  },
+  {
+    "text": "\"5 of the last 7\" is the honest number. Streaks reset to zero; consistency does not.",
+    "practice": "Consistency over streaks",
+    "source": "Lally et al. 2010",
+    "group": "habit"
+  },
+  {
+    "text": "Attach the habit to something that already happens: right after breakfast, right after the last lecture.",
+    "practice": "Habit stacking",
+    "source": "Fogg 2019, Tiny Habits",
+    "group": "habit"
+  },
+  {
+    "text": "Rescheduled three times? Either drop it or make it tiny. Carrying it costs more than deciding.",
+    "practice": "Drop after three reschedules",
+    "source": "Allen 2001, weekly review",
+    "group": "review"
+  },
+  {
+    "text": "Small wins, visible every day, are the strongest driver of a good working week.",
+    "practice": "Progress principle",
+    "source": "Amabile & Kramer 2011",
+    "group": "review"
+  },
+  {
+    "text": "A weekly review is where the backlog gets honest: what still matters, what never will.",
+    "practice": "Weekly review",
+    "source": "Allen 2001",
+    "group": "review"
+  }
+]
