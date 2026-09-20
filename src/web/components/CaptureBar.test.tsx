@@ -30,7 +30,7 @@ describe('CaptureBar', () => {
     expect(screen.getByTestId(T.captureInput)).toHaveFocus();
   });
 
-  it('[F-001] Enter posts the capture with the client headers, clears the bar and keeps focus', async () => {
+  it('[F-001] Shift+Enter posts the capture with the client headers, clears the bar and keeps focus', async () => {
     const server = makeState([item({ id: 'SERVER1', title: 'Read paper X' })]);
     const fetchSpy = mockFetch(() =>
       jsonResponse(
@@ -42,7 +42,7 @@ describe('CaptureBar', () => {
     const input = screen.getByTestId(T.captureInput) as HTMLInputElement;
     await userEvent.type(input, 'Read paper X');
     await act(async () => {
-      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
       await Promise.resolve();
     });
     expect(fetchSpy).toHaveBeenCalledTimes(1);
@@ -89,7 +89,7 @@ describe('CaptureBar', () => {
     const input = screen.getByTestId(T.captureInput) as HTMLInputElement;
     await userEvent.type(input, 'Read paper X');
     await act(async () => {
-      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -130,7 +130,7 @@ describe('CaptureBar', () => {
     const input = screen.getByTestId(T.captureInput);
     await userEvent.type(input, '?thesis');
     expect(useStore.getState().filter).toBe('thesis');
-    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(screen.getByTestId(T.captureChip).textContent).toBe('filter: thesis');
   });
@@ -143,5 +143,37 @@ describe('CaptureBar', () => {
     act(() => useStore.getState().setMode('capture'));
     fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(useStore.getState().mode).toBe('list');
+  });
+
+  it('[F-031] Enter alone does not submit (it is a new line); the Add button submits', async () => {
+    const fetchSpy = mockFetch(() =>
+      jsonResponse(
+        {
+          item: item({ title: 'Call alice' }),
+          parsed: { tokens: [], warnings: [] },
+          state: makeState([]),
+        },
+        201,
+      ),
+    );
+    seedStore(makeState([]));
+    render(<CaptureBar />);
+    const input = screen.getByTestId(T.captureInput) as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: 'Call alice\n- prepare questions' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(input.value).toBe('Call alice\n- prepare questions');
+    fireEvent.click(screen.getByTestId(T.captureSubmit));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/capture',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(bodyOf(fetchSpy.mock.calls[0])).toEqual({
+      text: 'Call alice\n- prepare questions',
+      source: 'ui',
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
   });
 });

@@ -173,7 +173,38 @@ function pad(n: number): string {
   return n < 10 ? `0${n}` : String(n);
 }
 
+const BULLET = /^\s*(?:[-*•]|\[( |x|X)\])\s+(.*)$/;
+
+/**
+ * A capture may span several lines: the first line is the heading (title + tokens), every later
+ * line is either a sub-todo (`- …`, `* …`, `[ ] …`, `[x] …` = already done) or part of the note.
+ */
 export function parseCapture(text: string, clock: Clock, settings: Settings): ParsedCapture {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
+  const firstIdx = lines.findIndex((l) => l.trim() !== '');
+  const heading = firstIdx === -1 ? '' : lines[firstIdx];
+  const parsed = parseHeading(heading, clock, settings);
+  if (parsed.filter !== undefined) return parsed;
+  const subtasks: Array<{ title: string; done: boolean }> = [];
+  const noteLines: string[] = [];
+  for (const line of lines.slice(firstIdx + 1)) {
+    const m = BULLET.exec(line);
+    if (m) {
+      const title = m[2].trim();
+      if (title)
+        subtasks.push({ title: title.slice(0, 200), done: (m[1] ?? '').toLowerCase() === 'x' });
+    } else {
+      noteLines.push(line.trimEnd());
+    }
+  }
+  const note = noteLines.join('\n').trim();
+  if (note) parsed.note = note.slice(0, 5000);
+  if (subtasks.length > 0) parsed.subtasks = subtasks.slice(0, 100);
+  return parsed;
+}
+
+/** The heading line alone: title plus every quick-syntax token. */
+export function parseHeading(text: string, clock: Clock, settings: Settings): ParsedCapture {
   const tokens: Token[] = [];
   const warnings: string[] = [];
   const trimmed = text.trim();

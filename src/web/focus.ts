@@ -62,6 +62,7 @@ export type FocusAction =
   | { type: 'sync' }
   | { type: 'enterCapture'; insert?: string }
   | { type: 'enterList' }
+  | { type: 'toggleDetails' }
   | { type: 'captureSubmit'; target?: 'today' }
   | { type: 'captureClear' }
   | { type: 'recall' };
@@ -93,11 +94,12 @@ export const INLINE_KEYS: Readonly<Record<string, InlineKind>> = {
 /** Human-readable key map for the `?` overlay. */
 export const KEY_HELP: ReadonlyArray<{ keys: string; what: string }> = [
   { keys: '/', what: 'focus the capture bar' },
-  { keys: 'Enter', what: 'capture to Backlog (or where the text says)' },
-  { keys: '⌘Enter', what: 'capture to Today' },
+  { keys: 'Shift+Enter', what: 'add the todo (Enter = new line: notes, - sub-todos)' },
+  { keys: '⌘Enter', what: 'add to Today' },
   { keys: '↑', what: 'recall the last capture' },
   { keys: '↓ / Esc', what: 'leave the bar → list mode' },
   { keys: 'j / k', what: 'move down / up' },
+  { keys: 'Space', what: 'fold / unfold notes and sub-todos' },
   { keys: 'x / u', what: 'done / undo' },
   { keys: 's', what: 'skip' },
   { keys: 't / T / b', what: 'Today / tomorrow / Backlog' },
@@ -140,9 +142,9 @@ export function mapKey(ctx: FocusContext, ev: KeyInput): FocusAction {
 function mapCapture(ctx: FocusContext, ev: KeyInput): FocusAction {
   switch (ev.key) {
     case 'Enter':
-      return ev.meta || ev.ctrl
-        ? { type: 'captureSubmit', target: 'today' }
-        : { type: 'captureSubmit' };
+      // Enter alone inserts a new line (multi-line captures); Shift+Enter submits, ⌘/Ctrl+Enter submits to Today
+      if (ev.meta || ev.ctrl) return { type: 'captureSubmit', target: 'today' };
+      return ev.shift ? { type: 'captureSubmit' } : { type: 'none' };
     case 'Escape':
       return ctx.inputEmpty ? { type: 'enterList' } : { type: 'captureClear' };
     case 'ArrowDown':
@@ -188,6 +190,7 @@ function mapList(ctx: FocusContext, ev: KeyInput): FocusAction {
     default:
       break;
   }
+  if (ev.key === ' ') return { type: 'toggleDetails' };
   const row = ROW_KEYS[ev.key];
   if (row) return { type: 'row', action: row };
   const inline = INLINE_KEYS[ev.key];

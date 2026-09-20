@@ -212,3 +212,19 @@
   - src/domain/state/reducer.test.ts#[F-030] archives every done non-repeat item, leaves the rest, and records history
   - test/server/api.stats.test.ts#[F-030] POST /api/day/clearDone and the archive item action move done items into archive/YYYY-MM.json
   - src/web/components/TodayList.test.tsx#[F-030] "clear done" and the ✕ on a done row archive instead of dropping
+- id: F-031
+  title: 'Multi-line capture: first line = heading with the quick syntax; `- `/`* `/`[ ]`/`[x]` lines = sub-todos; other lines = note; Enter is a new line, Shift+Enter or the Add button submits, ⌘Enter
+    adds to Today'
+  practice: capture everything, plan only the next step
+  status: done
+  tests:
+  - src/domain/capture/parseCapture.test.ts#[F-031] the first line is the heading with tokens; bullets become sub-todos, other lines the note
+  - test/server/api.subtasks.test.ts#[F-031] a multi-line capture stores the heading as title, bullets as sub-todos and the rest as note
+  - src/web/components/CaptureBar.test.tsx#[F-031] Enter alone does not submit (it is a new line); the Add button submits
+- id: F-032
+  title: 'Fold / unfold: rows show only the heading and chips (plus a n/m sub-todo count); ▸ or Space reveals the note and sub-todos with checkboxes'
+  practice: a small list to look at, detail on demand
+  status: done
+  tests:
+  - src/web/components/TodayList.test.tsx#[F-032] rows show only the heading; the fold button reveals the note and sub-todos, a checkbox PATCHes them
+  - test/server/api.subtasks.test.ts#[F-032] PATCH can tick a sub-todo; unknown keys are still rejected

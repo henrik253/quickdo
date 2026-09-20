@@ -43,6 +43,9 @@ export function useKeyboard() {
         case 'toggleView':
           st.toggleView();
           return;
+        case 'toggleDetails':
+          if (st.cursor) st.toggleExpanded(st.cursor);
+          return;
         case 'toggleHelp':
           st.setHelpOpen(!st.helpOpen);
           return;

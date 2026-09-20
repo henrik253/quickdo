@@ -65,11 +65,18 @@ export const LlmFormatSchema = z.object({
   model: z.string().max(100).optional(),
 });
 
+export const SubtaskSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1).max(200),
+  done: z.boolean(),
+});
+
 export const ItemSchema = z
   .object({
     id: z.string().min(1),
     title: z.string().min(1).max(200),
     note: z.string().optional(),
+    subtasks: z.array(SubtaskSchema).max(100).optional(),
     status: StatusSchema,
     scheduledFor: ISODate.optional(),
     suggestedFor: ISODate.optional(),

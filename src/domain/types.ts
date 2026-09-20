@@ -40,10 +40,17 @@ export interface LlmFormat {
   model?: string;
 }
 
+export interface Subtask {
+  id: string; // ULID
+  title: string;
+  done: boolean;
+}
+
 export interface Item {
   id: string; // ULID, assigned by the Mac
   title: string;
   note?: string;
+  subtasks?: Subtask[]; // bullet lines of a multi-line capture
   status: Status;
   scheduledFor?: ISODate; // present => on that day's list; absent => Backlog
   suggestedFor?: ISODate; // agent suggestion, never auto-applied
@@ -202,6 +209,8 @@ export interface ParsedCapture {
   repeat?: Repeat;
   due?: ISODate;
   filter?: string; // leading `?`: not a capture, a live filter
+  note?: string; // lines after the heading that are not bullets, joined with newlines
+  subtasks?: Array<{ title: string; done: boolean }>; // `- `, `* `, `[ ] `, `[x] ` lines after the heading
   tokens: Token[];
   warnings: string[];
 }
@@ -227,6 +236,7 @@ export type EditablePatch = Partial<
     | 'checkpoint'
     | 'scheduledFor'
     | 'llm'
+    | 'subtasks'
   >
 >;
 

@@ -77,6 +77,9 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   const rowAction = useStore((s) => s.rowAction);
   const patch = useStore((s) => s.patch);
   const showToast = useStore((s) => s.showToast);
+  const expanded = useStore((s) => s.expanded);
+  const toggleExpanded = useStore((s) => s.toggleExpanded);
+  const toggleSubtask = useStore((s) => s.toggleSubtask);
 
   if (!state) return null;
   const today = state.derived.date;
@@ -145,6 +148,10 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   };
 
   const mark = isDone ? '✓' : isSkipped ? '–' : item.startedAt ? '▶' : '·';
+  const subtasks = item.subtasks ?? [];
+  const hasDetails = subtasks.length > 0 || Boolean(item.note);
+  const isOpen = hasDetails && Boolean(expanded[item.id]);
+  const subDone = subtasks.filter((st) => st.done).length;
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard handling is global (list mode); the click only moves the cursor
@@ -231,6 +238,16 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
             moved {item.rescheduleCount}×
           </span>
         )}
+        {subtasks.length > 0 && (
+          <span
+            className="chip"
+            data-testid={T.rowChip}
+            data-kind="subtasks"
+            title="sub-todos done"
+          >
+            {subDone}/{subtasks.length}
+          </span>
+        )}
         {item.llm?.status === 'pending' && (
           <span
             className="chip llm"
@@ -254,6 +271,23 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         )}
         {extra}
       </span>
+      {hasDetails && (
+        <button
+          type="button"
+          className="fold"
+          data-testid={T.rowFold}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? 'fold details' : 'unfold notes and sub-todos'}
+          title="notes and sub-todos (Space)"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpanded(item.id);
+          }}
+        >
+          {isOpen ? '▾' : '▸'}
+        </button>
+      )}
       {item.repeat === undefined && (
         <button
           type="button"
@@ -280,6 +314,32 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         </span>
       )}
       {slip && <SlipBanner kind={slip} onAction={(a) => void rowAction(item.id, a)} />}
+      {isOpen && (
+        <div className="details" data-testid={T.rowDetails}>
+          {item.note && (
+            <p className="note" data-testid={T.rowNote}>
+              {item.note}
+            </p>
+          )}
+          {subtasks.length > 0 && (
+            <ul className="subtasks">
+              {subtasks.map((st) => (
+                <li key={st.id} data-testid={T.rowSubtask} data-done={st.done}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={st.done}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onChange={() => void toggleSubtask(item.id, st.id)}
+                    />
+                    <span className={st.done ? 'done' : ''}>{st.title}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </li>
   );
 }

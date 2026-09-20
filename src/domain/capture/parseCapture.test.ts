@@ -324,3 +324,46 @@ describe('parseCapture', () => {
     });
   });
 });
+
+describe('multi-line captures (F-031)', () => {
+  it('[F-031] the first line is the heading with tokens; bullets become sub-todos, other lines the note', () => {
+    const p = parseCapture(
+      'Prepare the thesis meeting !today ~45m #thesis\nBring the draft and the figures.\n- print the outline\n* email alice the agenda\n[x] book the room\n[ ] charge the laptop\nSecond note line',
+      clock,
+      settings,
+    );
+    expect(p.title).toBe('Prepare the thesis meeting');
+    expect(p.scheduledFor).toBe('2026-09-18');
+    expect(p.estimateMin).toBe(45);
+    expect(p.project).toBe('thesis');
+    expect(p.subtasks).toEqual([
+      { title: 'print the outline', done: false },
+      { title: 'email alice the agenda', done: false },
+      { title: 'book the room', done: true },
+      { title: 'charge the laptop', done: false },
+    ]);
+    expect(p.note).toBe('Bring the draft and the figures.\nSecond note line');
+  });
+
+  it('[F-031] tokens on later lines are plain text, leading blank lines are skipped, CRLF works', () => {
+    const p = parseCapture(
+      '\r\n\r\nCall alice\r\n#thesis is not a project here\r\n- !today is a sub-todo title',
+      clock,
+      settings,
+    );
+    expect(p.title).toBe('Call alice');
+    expect(p.project).toBeUndefined();
+    expect(p.scheduledFor).toBeUndefined();
+    expect(p.note).toBe('#thesis is not a project here');
+    expect(p.subtasks).toEqual([{ title: '!today is a sub-todo title', done: false }]);
+  });
+
+  it('[F-031] a single line has neither note nor subtasks; a ? filter ignores the rest', () => {
+    const one = parseCapture('Read paper X', clock, settings);
+    expect(one.note).toBeUndefined();
+    expect(one.subtasks).toBeUndefined();
+    const f = parseCapture('? alice\n- ignored', clock, settings);
+    expect(f.filter).toBe('alice');
+    expect(f.subtasks).toBeUndefined();
+  });
+});

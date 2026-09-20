@@ -140,9 +140,15 @@ section h2.amber {
   padding-block: 6px 4px;
 }
 
-.capture input {
+.capture textarea {
+  display: block;
   width: 100%;
+  resize: none;
+  min-height: 44px;
+  max-height: 40vh;
+  overflow-y: auto;
   font: inherit;
+  line-height: 1.4;
   font-size: 17px;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -152,7 +158,7 @@ section h2.amber {
   outline: none;
 }
 
-.capture input:focus {
+.capture textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
@@ -679,4 +685,85 @@ section h2.amber {
 }
 .link-button:hover {
   color: var(--text);
+}
+
+/* ---------- multi-line capture ---------- */
+.capture .bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.capture .bar textarea {
+  flex: 1;
+  min-width: 0;
+}
+.capture .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.capture .actions button {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.capture .actions button.primary {
+  background: var(--accent, #0f6e63);
+  border-color: var(--accent, #0f6e63);
+  color: #fff;
+}
+.capture .actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ---------- row fold + details ---------- */
+.row .fold {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.row .fold:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.row .details {
+  flex-basis: 100%;
+  width: 100%;
+  margin: 6px 0 2px 22px;
+  font-size: 0.9em;
+}
+.row .details .note {
+  margin: 0 0 6px;
+  white-space: pre-wrap;
+  color: var(--muted);
+}
+.row .details .subtasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.row .details .subtasks label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.row .details .subtasks .done {
+  text-decoration: line-through;
+  color: var(--muted);
 }

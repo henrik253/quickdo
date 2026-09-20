@@ -319,4 +319,52 @@ describe('TodayList', () => {
       await Promise.resolve();
     });
   });
+
+  it('[F-032] rows show only the heading; the fold button reveals the note and sub-todos, a checkbox PATCHes them', async () => {
+    const fetchSpy = mockFetch(() => jsonResponse({ state: makeState([]) }));
+    seedStore(
+      makeState([
+        todayItem({
+          id: 'A',
+          title: 'Prepare the thesis meeting',
+          note: 'Bring the draft.',
+          subtasks: [
+            { id: 's1', title: 'print the outline', done: false },
+            { id: 's2', title: 'book the room', done: true },
+          ],
+        }),
+        todayItem({ id: 'B', title: 'Plain todo' }),
+      ]),
+    );
+    render(<Host />);
+    expect(screen.queryByTestId(T.rowDetails)).toBeNull();
+    expect(screen.getAllByTestId(T.rowFold)).toHaveLength(1); // only the row with details
+    const chips = screen.getAllByTestId(T.rowChip).filter((c) => c.dataset.kind === 'subtasks');
+    expect(chips[0].textContent).toBe('1/2');
+    fireEvent.click(screen.getByTestId(T.rowFold));
+    expect(screen.getByTestId(T.rowNote).textContent).toBe('Bring the draft.');
+    expect(screen.getAllByTestId(T.rowSubtask)).toHaveLength(2);
+    const box = within(screen.getAllByTestId(T.rowSubtask)[0]).getByRole('checkbox');
+    fireEvent.click(box);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/items/A',
+      expect.objectContaining({ method: 'PATCH' }),
+    );
+    expect(bodyOf(fetchSpy.mock.calls[0])).toEqual({
+      subtasks: [
+        { id: 's1', title: 'print the outline', done: true },
+        { id: 's2', title: 'book the room', done: true },
+      ],
+    });
+    // Space on the highlighted row folds it again
+    act(() => {
+      useStore.getState().setCursor('A');
+      useStore.getState().setMode('list');
+    });
+    fireEvent.keyDown(document.body, { key: ' ' });
+    expect(screen.queryByTestId(T.rowDetails)).toBeNull();
+    await act(async () => {
+      await Promise.resolve();
+    });
+  });
 });

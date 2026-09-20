@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { parseCapture } from '../../domain/capture/parseCapture';
 import { padded } from '../../domain/time';
 import { DEFAULT_SETTINGS, type ParsedCapture, type Token } from '../../domain/types';
@@ -66,7 +66,7 @@ export function CaptureBar() {
   const setDraft = useStore((s) => s.setDraft);
   const setMode = useStore((s) => s.setMode);
   const capture = useStore((s) => s.capture);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const settings = state?.settings ?? DEFAULT_SETTINGS;
   const clock = useMemo(
@@ -92,7 +92,20 @@ export function CaptureBar() {
     else if (document.activeElement === el) el.blur();
   }, [mode, helpOpen]);
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  // grow with the text (one line for a plain todo, more for notes and sub-todos)
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (!el || draft === undefined) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, window.innerHeight * 0.4)}px`;
+  }, [draft]);
+
+  const submit = (target?: 'today') => {
+    if (!draft.trim() || parsed?.filter !== undefined) return;
+    void capture(draft, target).then(() => inputRef.current?.focus());
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const action = mapKey(
       {
         mode: 'capture',
@@ -106,8 +119,7 @@ export function CaptureBar() {
     switch (action.type) {
       case 'captureSubmit': {
         e.preventDefault();
-        if (parsed?.filter !== undefined) return; // a filter, not a capture
-        void capture(draft, action.target).then(() => inputRef.current?.focus());
+        submit(action.target);
         return;
       }
       case 'captureClear':
@@ -132,22 +144,47 @@ export function CaptureBar() {
 
   return (
     <div className="capture">
-      <input
-        ref={inputRef}
-        data-testid={T.captureInput}
-        type="text"
-        value={draft}
-        placeholder="Add a todo…  !today  @9  ~30m  #project  when …   (? filters)"
-        autoComplete="off"
-        autoCorrect="off"
-        spellCheck={false}
-        aria-label="Capture"
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={onKeyDown}
-        onFocus={() => {
-          if (mode !== 'capture') setMode('capture');
-        }}
-      />
+      <div className="bar">
+        <textarea
+          ref={inputRef}
+          data-testid={T.captureInput}
+          rows={1}
+          value={draft}
+          placeholder="Add a todo…  !today  @9  ~30m  #project  when …   ↵ new line: notes, - sub-todos · Shift+↵ adds   (? filters)"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Capture"
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={onKeyDown}
+          onFocus={() => {
+            if (mode !== 'capture') setMode('capture');
+          }}
+        />
+        <div className="actions">
+          <button
+            type="button"
+            className="primary"
+            data-testid={T.captureSubmit}
+            title="add (Shift+Enter)"
+            disabled={!draft.trim() || parsed?.filter !== undefined}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => submit()}
+          >
+            Add
+          </button>
+          <button
+            type="button"
+            data-testid={T.captureToday}
+            title="add to Today (⌘Enter)"
+            disabled={!draft.trim() || parsed?.filter !== undefined}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => submit('today')}
+          >
+            Today
+          </button>
+        </div>
+      </div>
       <div className="chips" data-testid={T.captureChips} aria-live="polite">
         {parsed?.tokens.map((tk) => (
           <span

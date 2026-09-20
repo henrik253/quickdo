@@ -28,7 +28,7 @@ test.describe('capture', () => {
     await expect(page.getByTestId('capture-chip').filter({ hasText: 'Today' })).toBeVisible();
     await expect(page.getByTestId('capture-chip').filter({ hasText: '40m padded' })).toBeVisible();
 
-    await input.press('Enter');
+    await input.press('Shift+Enter');
     const row = page.getByTestId('today-row').filter({ hasText: title });
     await expect(row).toBeVisible({ timeout: 500 });
     await expect(input).toHaveValue('');
@@ -78,7 +78,7 @@ test.describe('capture', () => {
     await page.goto('/');
     const title = uniqueTitle('Lecture A notes');
     await page.getByTestId('capture-input').fill(title);
-    await page.getByTestId('capture-input').press('Enter');
+    await page.getByTestId('capture-input').press('Shift+Enter');
     const backlog = page.getByTestId('backlog');
     await expect(backlog.getByTestId('row').filter({ hasText: title })).toBeVisible();
     await expect(page.getByTestId('today-row').filter({ hasText: title })).toHaveCount(0);

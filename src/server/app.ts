@@ -98,6 +98,7 @@ const PATCH_KEYS = [
   'order',
   'checkpoint',
   'scheduledFor',
+  'subtasks',
 ] as const;
 
 /** EditablePatch over JSON: `null` clears a field (except `checkpoint`, where null is a value). */
@@ -115,6 +116,7 @@ const PatchBody = ItemSchema.pick({
   order: true,
   checkpoint: true,
   scheduledFor: true,
+  subtasks: true,
 })
   .partial()
   .strict();
@@ -197,7 +199,12 @@ export function createApp(deps: AppDeps): Hono {
       return c.json({ error: result.warning ?? 'no title' }, 400);
     let item = result.item;
     if (deps.formatter?.available()) {
-      const raw = body.data.text;
+      // the model tidies the heading only; notes and sub-todos stay exactly as typed
+      const raw =
+        body.data.text
+          .replace(/\r\n?/g, '\n')
+          .split('\n')
+          .find((l) => l.trim() !== '') ?? body.data.text;
       const marked = store.dispatch({
         type: 'edit',
         id: item.id,

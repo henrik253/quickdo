@@ -53,6 +53,8 @@ export interface Store {
   pendingChord: 'g' | null;
   inline: Inline | null;
   helpOpen: boolean;
+  /** Rows whose notes / sub-todos are unfolded. */
+  expanded: Record<string, boolean>;
   updatePending: boolean;
   /** Rows that just appeared (flash), item ids. */
   flash: string[];
@@ -77,6 +79,8 @@ export interface Store {
   capture(text: string, target?: CaptureTarget): Promise<boolean>;
   rowAction(id: string, action: RowAction): Promise<void>;
   patch(id: string, patch: EditablePatch): Promise<void>;
+  toggleExpanded(id: string): void;
+  toggleSubtask(id: string, subtaskId: string): Promise<void>;
   shiftBlock(id: string, minutes: number): Promise<void>;
   freshStart(): Promise<void>;
   /** Archive every done item (they stay in the history / done tracker). */
@@ -232,6 +236,7 @@ export const useStore = create<Store>()((set, get) => ({
   pendingChord: null,
   inline: null,
   helpOpen: false,
+  expanded: {},
   updatePending: false,
   flash: [],
 
@@ -371,6 +376,22 @@ export const useStore = create<Store>()((set, get) => ({
       set({ state: s });
       get().showToast(`${action} failed: ${(err as Error).message}`, 'warn');
     }
+  },
+
+  toggleExpanded(id) {
+    const expanded = { ...get().expanded };
+    if (expanded[id]) delete expanded[id];
+    else expanded[id] = true;
+    set({ expanded });
+  },
+
+  async toggleSubtask(id, subtaskId) {
+    const item = get().state?.items.find((it) => it.id === id);
+    if (!item?.subtasks) return;
+    const subtasks = item.subtasks.map((st) =>
+      st.id === subtaskId ? { ...st, done: !st.done } : st,
+    );
+    await get().patch(id, { subtasks });
   },
 
   async patch(id, patch) {

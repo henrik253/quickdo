@@ -45,6 +45,7 @@ const EDITABLE_KEYS: ReadonlyArray<keyof EditablePatch> = [
   'checkpoint',
   'scheduledFor',
   'llm',
+  'subtasks',
 ];
 
 const INGEST_GUARDED = new Set(['title', 'note', 'cue', 'due', 'estimateMin']);
@@ -216,6 +217,14 @@ function add(
   if (parsed.fallback !== undefined) item.fallback = { ...parsed.fallback };
   if (parsed.repeat !== undefined) item.repeat = parsed.repeat;
   if (parsed.due !== undefined) item.due = parsed.due;
+  if (parsed.note !== undefined) item.note = parsed.note;
+  if (parsed.subtasks && parsed.subtasks.length > 0) {
+    item.subtasks = parsed.subtasks.map((st) => ({
+      id: newId(ctx.clock),
+      title: st.title,
+      done: st.done,
+    }));
+  }
 
   let scheduledFor = parsed.scheduledFor;
   let wantsSlot = parsed.wantsSlot === true;

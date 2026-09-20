@@ -35,6 +35,19 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
       computed (the tips use it); anchors/blocks still work via `@`, `[`, `]`, `+`. F-010 back to planned, F-009/F-012
       re-titled in `features.yaml`.
 
+## v0.4 — Multi-line captures with notes and sub-todos (2026-09-20)
+
+- [x] **Capture bar is a growing textarea** (F-031): Enter inserts a new line; Shift+Enter or the **Add** button submits;
+      ⌘Enter / the **Today** button adds to Today. `parseCapture()` now splits lines: the first non-empty line is the
+      heading and is parsed exactly as before (`!day @time ~est #project +tag when … due …`); `- ` / `* ` / `[ ] ` /
+      `[x] ` lines become `item.subtasks` (`{ id, title, done }`, ULIDs from the reducer); every other line joins
+      `item.note`. Tokens on later lines are plain text. The LLM formatter only sees the heading, so notes and sub-todos
+      stay exactly as typed. `PATCH /api/items/:id` accepts `subtasks`.
+- [x] **Fold / unfold** (F-032): rows keep showing only the heading + chips, plus an `n/m` sub-todo chip; `▸` (or
+      Space on the highlighted row) opens the note and the sub-todos with checkboxes that PATCH the item. Fold state is
+      per browser session, not persisted.
+- [ ] Agent contract: `add` commands cannot carry sub-todos yet (`docs/AGENT.md` unchanged).
+
 ## v0.3 — Done tracking (2026-09-19)
 
 - [x] **Done tracker** (F-029): `DoneChart` under the progress bar shows finished items per day (3 days / 7 days /

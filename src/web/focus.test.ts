@@ -12,8 +12,9 @@ const base: FocusContext = {
 const capture: FocusContext = { ...base, mode: 'capture' };
 
 describe('focus model', () => {
-  it('[F-001] capture mode: Enter submits, ⌘Enter targets Today, ↑ recalls, Esc on empty leaves', () => {
-    expect(mapKey(capture, { key: 'Enter' })).toEqual({ type: 'captureSubmit' });
+  it('[F-001] capture mode: Shift+Enter submits, Enter is a new line, ⌘Enter targets Today, ↑ recalls, Esc on empty leaves', () => {
+    expect(mapKey(capture, { key: 'Enter' })).toEqual({ type: 'none' }); // new line
+    expect(mapKey(capture, { key: 'Enter', shift: true })).toEqual({ type: 'captureSubmit' });
     expect(mapKey(capture, { key: 'Enter', meta: true })).toEqual({
       type: 'captureSubmit',
       target: 'today',
