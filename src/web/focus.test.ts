@@ -70,7 +70,7 @@ describe('focus model', () => {
     expect(mapKey(base, { key: '[' })).toEqual({ type: 'shiftBlock', minutes: -15 });
     expect(mapKey(base, { key: ']' })).toEqual({ type: 'shiftBlock', minutes: 15 });
     expect(mapKey(base, { key: '.' })).toEqual({ type: 'freshStart' });
-    expect(mapKey(base, { key: 'p' })).toEqual({ type: 'toggleView' });
+    expect(mapKey(base, { key: 'p' })).toEqual({ type: 'enterCapture', insert: 'p' }); // no view toggle since v0.5
     expect(mapKey(base, { key: '?' })).toEqual({ type: 'toggleHelp' });
     expect(mapKey(base, { key: 'j' })).toEqual({ type: 'move', delta: 1 });
     expect(mapKey(base, { key: 'k' })).toEqual({ type: 'move', delta: -1 });
