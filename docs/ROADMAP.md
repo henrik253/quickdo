@@ -37,6 +37,11 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 
 ## v0.5 — Checkbox and always-visible upcoming (2026-09-21)
 
+- [x] **Edit afterwards** (F-036): `e` or the ✎ button opens the todo as text in the capture syntax
+      (`src/domain/capture/serialize.ts`: `itemToText` / `editPatchFromText`); Shift+Enter saves a diff-only PATCH,
+      a token removed from the heading clears the field, `!day` in the heading moves the item, sub-todos are matched by
+      title so ids and done state survive. The one-line editors (`r`, `@`, `c`) are unchanged.
+
 - [x] **Unfold all** (F-035, same day): a switch in the top bar (`quickdo.unfoldAll` in localStorage, default on) opens
       every row's notes and sub-todos; `▸`/Space still fold single rows (per-row overrides reset when the switch flips).
 

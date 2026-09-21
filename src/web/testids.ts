@@ -40,6 +40,7 @@ export const T = {
   captureSubmit: 'capture-submit',
   captureToday: 'capture-today',
   rowFold: 'row-fold',
+  rowEdit: 'row-edit',
   rowTick: 'row-tick',
   unfoldAll: 'unfold-all',
   rowDetails: 'row-details',

@@ -50,8 +50,8 @@
   practice: implementation intentions (Gollwitzer & Sheeran 2006)
   status: in-progress
   tests:
-  - src/web/components/TodayList.test.tsx#[F-007] e opens an inline title editor; Enter PATCHes the title, Esc cancels
   - test/server/api.items.test.ts#[F-007] applies an editable patch (cue, estimate) and reports the change in history
+  - src/web/components/TodayList.test.tsx#[F-007] e opens the full editor (title, tags, notes, sub-todos); Shift+Enter PATCHes only what changed, Esc cancels
 - id: F-008
   title: Progress bar with one segment per committed Today item
   practice: progress principle (Amabile & Kramer 2011)
@@ -248,3 +248,11 @@
   status: done
   tests:
   - 'src/web/components/TodayList.test.tsx#[F-035] unfold all is on by default: details show without clicking; a row can still be folded; the switch folds everything'
+- id: F-036
+  title: 'Edit a todo afterwards: e or ✎ opens it in the capture syntax (heading with tags, note lines, - sub-todos); Shift+Enter saves only the changed fields, removed tokens clear them, sub-todos keep
+    their ids and done state'
+  practice: capture everything, refine later
+  status: done
+  tests:
+  - src/domain/capture/serialize.test.ts#[F-036] only changed fields are patched; removed tokens clear; sub-todos keep ids and done state
+  - src/web/components/TodayList.test.tsx#[F-007] e opens the full editor (title, tags, notes, sub-todos); Shift+Enter PATCHes only what changed, Esc cancels

@@ -801,3 +801,33 @@ section h2.amber {
   color: var(--text);
   background: var(--surface-2);
 }
+
+/* ---------- full editor + edit button ---------- */
+.row .inline-editor.multiline {
+  flex: 1 1 100%;
+  width: 100%;
+  min-height: 60px;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.row .edit {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.35;
+}
+.row:hover .edit,
+.row.cursor .edit {
+  opacity: 1;
+}
+.row .edit:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}

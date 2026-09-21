@@ -104,7 +104,7 @@ export const KEY_HELP: ReadonlyArray<{ keys: string; what: string }> = [
   { keys: 's', what: 'skip' },
   { keys: 't / T / b', what: 'Today / tomorrow / Backlog' },
   { keys: 'r', what: 'reschedule inline (mon · +2 · backlog)' },
-  { keys: 'e', what: 'edit the title inline' },
+  { keys: 'e', what: 'edit the todo: title, tags, notes, sub-todos (Shift+Enter saves)' },
   { keys: 'c', what: 'set the if-then cue' },
   { keys: '@', what: 'set a block (HH:MM)' },
   { keys: '[ / ]', what: 'shift the block ±15 min' },

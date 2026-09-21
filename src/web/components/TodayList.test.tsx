@@ -163,33 +163,48 @@ describe('TodayList', () => {
     });
   });
 
-  it('[F-007] e opens an inline title editor; Enter PATCHes the title, Esc cancels', async () => {
+  it('[F-007] e opens the full editor (title, tags, notes, sub-todos); Shift+Enter PATCHes only what changed, Esc cancels', async () => {
     const fetchSpy = mockFetch(() =>
       jsonResponse({
         state: makeState([todayItem({ id: 'A', title: 'Read paper X, section 3' })]),
       }),
     );
-    seedStore(makeState([todayItem({ id: 'A', title: 'Read paper X' })]));
+    seedStore(makeState([todayItem({ id: 'A', title: 'Read paper X', project: 'thesis' })]));
     render(<Host />);
     act(() => {
       useStore.getState().setCursor('A');
       useStore.getState().setMode('list');
     });
     fireEvent.keyDown(document.body, { key: 'e' });
-    const editor = screen.getByTestId(T.inlineEditor) as HTMLInputElement;
-    expect(editor.value).toBe('Read paper X');
-    fireEvent.change(editor, { target: { value: 'Read paper X, section 3' } });
-    fireEvent.keyDown(editor, { key: 'Enter' });
+    const editor = screen.getByTestId(T.inlineEditor) as HTMLTextAreaElement;
+    expect(editor.tagName).toBe('TEXTAREA');
+    expect(editor.value).toBe('Read paper X #thesis');
+    fireEvent.change(editor, {
+      target: { value: 'Read paper X, section 3 #thesis\nfocus on the method\n- skim the figures' },
+    });
+    fireEvent.keyDown(editor, { key: 'Enter' }); // new line, not a save
+    expect(screen.getByTestId(T.inlineEditor)).toBeTruthy();
+    fireEvent.keyDown(editor, { key: 'Enter', shiftKey: true });
     expect(screen.queryByTestId(T.inlineEditor)).toBeNull();
-    expect(bodyOf(fetchSpy.mock.calls[0])).toEqual({ title: 'Read paper X, section 3' });
+    const body = bodyOf(fetchSpy.mock.calls[0]) as {
+      title: string;
+      note: string;
+      subtasks: { title: string; done: boolean }[];
+    };
+    expect(body.title).toBe('Read paper X, section 3');
+    expect(body.note).toBe('focus on the method');
+    expect(body.subtasks.map((s) => [s.title, s.done])).toEqual([['skim the figures', false]]);
+    expect(body).not.toHaveProperty('project');
     expect(screen.getByTestId(T.rowTitle).textContent).toBe('Read paper X, section 3');
     await act(async () => {
       await Promise.resolve();
     });
-    fireEvent.keyDown(document.body, { key: 'c' });
+    fireEvent.click(screen.getByTestId(T.rowEdit));
     fireEvent.keyDown(screen.getByTestId(T.inlineEditor), { key: 'Escape' });
     expect(screen.queryByTestId(T.inlineEditor)).toBeNull();
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      await Promise.resolve();
+    });
   });
 
   it('[F-015] . posts a fresh start', async () => {

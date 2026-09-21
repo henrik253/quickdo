@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Item } from '../../domain/types';
+import { editPatchFromText, itemToText } from '../../domain/capture/serialize';
+import { newId } from '../../domain/state/reducer';
+import { DEFAULT_SETTINGS, type Item } from '../../domain/types';
 import type { InlineKind } from '../focus';
 import { blockRange, dateLabel, fmtMin, parseHHMM, parseRescheduleInput } from '../format';
-import { paddedOf, useStore } from '../store';
+import { clockOf, paddedOf, useStore } from '../store';
 import { T } from '../testids';
 import { SlipBanner, type SlipKind } from './SlipBanner';
 
@@ -16,7 +18,7 @@ interface Props {
 }
 
 const INLINE_PLACEHOLDER: Record<InlineKind, string> = {
-  edit: 'title',
+  edit: 'title  #project  +tag  ~30m  due …  when …\nnotes\n- sub-todo   [x] done sub-todo',
   reschedule: 'mon · +2 · tomorrow · backlog · 2026-09-30',
   block: 'HH:MM',
   cue: 'when I … (if-then cue)',
@@ -34,14 +36,46 @@ function InlineEditor({
   onCancel: () => void;
 }) {
   const [value, setValue] = useState(initial);
-  const ref = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
   useEffect(() => {
     ref.current?.focus();
-    ref.current?.select();
-  }, []);
+    if (kind !== 'edit') ref.current?.select();
+  }, [kind]);
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    e.stopPropagation();
+    // the full editor is multi-line: Enter = new line, Shift+Enter saves; the one-line editors save on Enter
+    const saves = e.key === 'Enter' && (kind !== 'edit' || e.shiftKey || e.metaKey || e.ctrlKey);
+    if (saves) {
+      e.preventDefault();
+      // unchanged text is a cancel, so a title rewritten by the model meanwhile is not overwritten
+      if (value.trim() === initial.trim()) onCancel();
+      else onSave(value);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+    }
+  };
+  if (kind === 'edit') {
+    return (
+      <textarea
+        ref={ref as React.RefObject<HTMLTextAreaElement>}
+        className="inline-editor multiline"
+        data-testid={T.inlineEditor}
+        data-kind={kind}
+        value={value}
+        rows={Math.min(12, Math.max(2, value.split('\n').length + 1))}
+        placeholder={INLINE_PLACEHOLDER[kind]}
+        aria-label="edit todo"
+        title="Shift+Enter saves · Esc cancels"
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={onKeyDown}
+        onBlur={onCancel}
+      />
+    );
+  }
   return (
     <input
-      ref={ref}
+      ref={ref as React.RefObject<HTMLInputElement>}
       className="inline-editor"
       data-testid={T.inlineEditor}
       data-kind={kind}
@@ -49,18 +83,7 @@ function InlineEditor({
       placeholder={INLINE_PLACEHOLDER[kind]}
       aria-label={`inline ${kind}`}
       onChange={(e) => setValue(e.target.value)}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          // unchanged text is a cancel, so a title rewritten by the model meanwhile is not overwritten
-          if (value.trim() === initial.trim()) onCancel();
-          else onSave(value);
-        } else if (e.key === 'Escape') {
-          e.preventDefault();
-          onCancel();
-        }
-      }}
+      onKeyDown={onKeyDown}
       onBlur={onCancel}
     />
   );
@@ -104,9 +127,18 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
     const value = raw.trim();
     closeInline();
     switch (kind) {
-      case 'edit':
-        if (value && value !== item.title) void patch(item.id, { title: value });
+      case 'edit': {
+        const clock = clockOf(state, useStore.getState().receivedAt);
+        const p = editPatchFromText(item, raw, clock, state.settings ?? DEFAULT_SETTINGS, () =>
+          newId(clock),
+        );
+        if (!p) {
+          showToast('a todo needs a title', 'warn');
+          return;
+        }
+        if (Object.keys(p).length > 0) void patch(item.id, p);
         return;
+      }
       case 'reschedule': {
         const to = parseRescheduleInput(value, today);
         if (to === undefined) {
@@ -138,7 +170,7 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   const initialFor = (kind: InlineKind): string => {
     switch (kind) {
       case 'edit':
-        return item.title;
+        return itemToText(item);
       case 'reschedule':
         return '';
       case 'block':
@@ -292,6 +324,24 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         )}
         {extra}
       </span>
+      {!isDone && (
+        <button
+          type="button"
+          className="edit"
+          data-testid={T.rowEdit}
+          aria-label={`edit "${item.title}"`}
+          title="edit title, tags, notes and sub-todos (e)"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setCursor(item.id);
+            setMode('list');
+            setInline({ id: item.id, kind: 'edit' });
+          }}
+        >
+          ✎
+        </button>
+      )}
       {hasDetails && (
         <button
           type="button"
