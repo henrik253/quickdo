@@ -37,6 +37,9 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
 
 ## v0.5 — Checkbox and always-visible upcoming (2026-09-21)
 
+- [x] **Unfold all** (F-035, same day): a switch in the top bar (`quickdo.unfoldAll` in localStorage, default on) opens
+      every row's notes and sub-todos; `▸`/Space still fold single rows (per-row overrides reset when the switch flips).
+
 - [x] **Finish checkbox** (F-033): every row starts with a checkbox (tick = done, untick = undo; `x`/`u` still work).
       A todo with sub-todos cannot be finished while one is open — the reducer's `done` refuses with
       "N sub-todos still open", so the checkbox is disabled with that hint, `x` shows it as a chip, and an agent `done`

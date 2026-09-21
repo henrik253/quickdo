@@ -336,6 +336,7 @@ describe('TodayList', () => {
         todayItem({ id: 'B', title: 'Plain todo' }),
       ]),
     );
+    act(() => useStore.getState().setUnfoldAll(false)); // this test exercises manual unfolding
     render(<Host />);
     expect(screen.queryByTestId(T.rowDetails)).toBeNull();
     expect(screen.getAllByTestId(T.rowFold)).toHaveLength(1); // only the row with details
@@ -406,5 +407,24 @@ describe('TodayList', () => {
     await act(async () => {
       await Promise.resolve();
     });
+  });
+
+  it('[F-035] unfold all is on by default: details show without clicking; a row can still be folded; the switch folds everything', () => {
+    seedStore(
+      makeState([
+        todayItem({ id: 'A', title: 'A', note: 'note A' }),
+        todayItem({ id: 'B', title: 'B', subtasks: [{ id: 's', title: 'sub', done: false }] }),
+        todayItem({ id: 'C', title: 'plain' }),
+      ]),
+    );
+    render(<TodayList />);
+    expect(screen.getAllByTestId(T.rowDetails)).toHaveLength(2);
+    fireEvent.click(screen.getAllByTestId(T.rowFold)[0]);
+    expect(screen.getAllByTestId(T.rowDetails)).toHaveLength(1);
+    act(() => useStore.getState().setUnfoldAll(false));
+    expect(screen.queryAllByTestId(T.rowDetails)).toHaveLength(0);
+    expect(localStorage.getItem('quickdo.unfoldAll')).toBe('off');
+    act(() => useStore.getState().setUnfoldAll(true));
+    expect(screen.getAllByTestId(T.rowDetails)).toHaveLength(2);
   });
 });

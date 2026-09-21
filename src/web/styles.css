@@ -784,3 +784,20 @@ section h2.amber {
 .row .tick + .mark {
   display: none;
 }
+
+/* ---------- unfold-all switch ---------- */
+.topbar .toggle {
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--muted);
+  padding: 2px 8px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+.topbar .toggle[aria-pressed="true"] {
+  color: var(--text);
+  background: var(--surface-2);
+}

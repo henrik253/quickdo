@@ -41,6 +41,7 @@ export const T = {
   captureToday: 'capture-today',
   rowFold: 'row-fold',
   rowTick: 'row-tick',
+  unfoldAll: 'unfold-all',
   rowDetails: 'row-details',
   rowNote: 'row-note',
   rowSubtask: 'row-subtask',

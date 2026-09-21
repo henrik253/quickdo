@@ -37,6 +37,7 @@ export interface Inline {
 
 export const DRAFT_KEY = 'quickdo.draft';
 export const LAST_CAPTURE_KEY = 'quickdo.lastCapture';
+export const UNFOLD_ALL_KEY = 'quickdo.unfoldAll';
 
 export interface Store {
   state: StateResponse | null;
@@ -54,7 +55,9 @@ export interface Store {
   inline: Inline | null;
   helpOpen: boolean;
   /** Rows whose notes / sub-todos are unfolded. */
-  expanded: Record<string, boolean>;
+  expanded: Record<string, boolean>; // per-row override of unfoldAll (true = open, false = folded)
+  /** Every row with notes / sub-todos starts unfolded (default on, remembered per browser). */
+  unfoldAll: boolean;
   updatePending: boolean;
   /** Rows that just appeared (flash), item ids. */
   flash: string[];
@@ -80,6 +83,7 @@ export interface Store {
   rowAction(id: string, action: RowAction): Promise<void>;
   patch(id: string, patch: EditablePatch): Promise<void>;
   toggleExpanded(id: string): void;
+  setUnfoldAll(on: boolean): void;
   toggleSubtask(id: string, subtaskId: string): Promise<void>;
   shiftBlock(id: string, minutes: number): Promise<void>;
   freshStart(): Promise<void>;
@@ -238,6 +242,7 @@ export const useStore = create<Store>()((set, get) => ({
   inline: null,
   helpOpen: false,
   expanded: {},
+  unfoldAll: readStorage(UNFOLD_ALL_KEY) !== 'off',
   updatePending: false,
   flash: [],
 
@@ -381,9 +386,14 @@ export const useStore = create<Store>()((set, get) => ({
 
   toggleExpanded(id) {
     const expanded = { ...get().expanded };
-    if (expanded[id]) delete expanded[id];
-    else expanded[id] = true;
+    const open = expanded[id] ?? get().unfoldAll;
+    expanded[id] = !open;
     set({ expanded });
+  },
+
+  setUnfoldAll(on) {
+    set({ unfoldAll: on, expanded: {} }); // the switch resets every per-row override
+    writeStorage(UNFOLD_ALL_KEY, on ? 'on' : 'off');
   },
 
   async toggleSubtask(id, subtaskId) {

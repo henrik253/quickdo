@@ -78,6 +78,7 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   const patch = useStore((s) => s.patch);
   const showToast = useStore((s) => s.showToast);
   const expanded = useStore((s) => s.expanded);
+  const unfoldAll = useStore((s) => s.unfoldAll);
   const toggleExpanded = useStore((s) => s.toggleExpanded);
   const toggleSubtask = useStore((s) => s.toggleSubtask);
 
@@ -150,7 +151,7 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   const mark = isDone ? '✓' : isSkipped ? '–' : item.startedAt ? '▶' : '·';
   const subtasks = item.subtasks ?? [];
   const hasDetails = subtasks.length > 0 || Boolean(item.note);
-  const isOpen = hasDetails && Boolean(expanded[item.id]);
+  const isOpen = hasDetails && (expanded[item.id] ?? unfoldAll);
   const subDone = subtasks.filter((st) => st.done).length;
   const subOpen = subtasks.length - subDone;
   const canFinish = isDone || subOpen === 0;

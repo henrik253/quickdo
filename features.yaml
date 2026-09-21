@@ -242,3 +242,9 @@
   tests:
   - src/web/components/Upcoming.test.tsx#[F-034] items scheduled for later days are always shown next to the backlog and can be finished directly
   - src/web/store.test.ts#[F-025] visibleRows orders Today, done, habits, upcoming, then backlog; ? filters only the lower lists
+- id: F-035
+  title: '"Unfold all" switch in the top bar, on by default and remembered per browser: every row with notes / sub-todos starts open; ▸ still folds single rows'
+  practice: detail in view without extra clicks
+  status: done
+  tests:
+  - 'src/web/components/TodayList.test.tsx#[F-035] unfold all is on by default: details show without clicking; a row can still be folded; the switch folds everything'

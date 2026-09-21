@@ -116,6 +116,8 @@ export function useKeyboard() {
 
 export function App() {
   const state = useStore((s) => s.state);
+  const unfoldAll = useStore((s) => s.unfoldAll);
+  const setUnfoldAll = useStore((s) => s.setUnfoldAll);
   useKeyboard();
 
   useEffect(() => {
@@ -136,6 +138,17 @@ export function App() {
         <span className="brand">Quickdo</span>
         <SyncBadge />
         <span className="spacer" />
+        <button
+          type="button"
+          className="toggle"
+          data-testid={T.unfoldAll}
+          aria-pressed={unfoldAll}
+          title="show notes and sub-todos of every row (single rows can still be folded)"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setUnfoldAll(!unfoldAll)}
+        >
+          {unfoldAll ? '▾ unfold all' : '▸ fold all'}
+        </button>
         <span className="badge" title="keys">
           ?
         </span>
