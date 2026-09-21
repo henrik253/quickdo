@@ -170,7 +170,8 @@ export function visibleRows(state: StateResponse | null, view: View, filter: str
     it.title.toLowerCase().includes(q) ||
     (it.project ?? '').toLowerCase().includes(q) ||
     it.tags.some((t) => t.toLowerCase().includes(q));
-  const lower = view === 'backlog' ? d.backlog : d.upcoming.flatMap((g) => g.items);
+  // upcoming days and the backlog are both always on screen (v0.5): upcoming first, then backlog
+  const lower = [...d.upcoming.flatMap((g) => g.items), ...d.backlog];
   return [...d.today, ...d.doneToday, ...d.habits.map((h) => h.item), ...lower.filter(matches)];
 }
 
@@ -392,6 +393,9 @@ export const useStore = create<Store>()((set, get) => ({
       st.id === subtaskId ? { ...st, done: !st.done } : st,
     );
     await get().patch(id, { subtasks });
+    if (subtasks.every((st) => st.done) && item.status !== 'done') {
+      get().showToast(`all sub-todos of "${item.title}" done — tick the todo to finish it`);
+    }
   },
 
   async patch(id, patch) {

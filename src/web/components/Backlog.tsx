@@ -15,9 +15,6 @@ export function Backlog() {
       <h2>
         backlog · {shown.length}
         {filter && <span className="chip">filter: {filter}</span>}
-        <span className="chip">
-          <kbd>p</kbd> upcoming
-        </span>
       </h2>
       {shown.length === 0 && (
         <p className="empty">{filter ? 'nothing matches' : 'backlog is empty'}</p>

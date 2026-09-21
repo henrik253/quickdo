@@ -12,13 +12,17 @@ export function Upcoming() {
   const groups = state.derived.upcoming
     .map((g) => ({ date: g.date, items: g.items.filter((it) => visible.has(it.id)) }))
     .filter((g) => g.items.length > 0);
+  if (groups.length === 0 && !filter) return null; // nothing scheduled ahead: no empty section
   return (
     <section data-testid={T.upcoming}>
       <h2>
         upcoming
         {filter && <span className="chip">filter: {filter}</span>}
-        <span className="chip">
-          <kbd>p</kbd> backlog
+        <span
+          className="chip"
+          title="scheduled for later days; the checkbox or x finishes them like any other row"
+        >
+          later days
         </span>
       </h2>
       {groups.length === 0 && <p className="empty">nothing scheduled ahead</p>}

@@ -767,3 +767,20 @@ section h2.amber {
   text-decoration: line-through;
   color: var(--muted);
 }
+
+/* ---------- row checkbox ---------- */
+.row .tick {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent, #0f6e63);
+  cursor: pointer;
+}
+.row .tick:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.row .tick + .mark {
+  display: none;
+}

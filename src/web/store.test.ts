@@ -113,7 +113,7 @@ describe('store', () => {
     expect(useStore.getState().updatePending).toBe(true);
   });
 
-  it('[F-025] visibleRows orders Today, done, habits, then the view; ? filters only the lower list', () => {
+  it('[F-025] visibleRows orders Today, done, habits, upcoming, then backlog; ? filters only the lower lists', () => {
     const s = makeState([
       todayItem({ id: 'T1', title: 'Read paper X' }),
       item({ id: 'B1', title: 'Reply to alice', project: 'thesis' }),
@@ -121,8 +121,20 @@ describe('store', () => {
       item({ id: 'H1', title: 'Water the fern', repeat: 'daily' }),
       item({ id: 'U1', title: 'Plan the week', scheduledFor: '2026-09-21' }),
     ]);
-    expect(visibleRows(s, 'backlog', '').map((it) => it.id)).toEqual(['T1', 'H1', 'B1', 'B2']);
-    expect(visibleRows(s, 'upcoming', '').map((it) => it.id)).toEqual(['T1', 'H1', 'U1']);
+    expect(visibleRows(s, 'backlog', '').map((it) => it.id)).toEqual([
+      'T1',
+      'H1',
+      'U1',
+      'B1',
+      'B2',
+    ]);
+    expect(visibleRows(s, 'upcoming', '').map((it) => it.id)).toEqual([
+      'T1',
+      'H1',
+      'U1',
+      'B1',
+      'B2',
+    ]);
     expect(visibleRows(s, 'backlog', 'thesis').map((it) => it.id)).toEqual(['T1', 'H1', 'B1']);
     seedStore(s);
     useStore.getState().setMode('list');

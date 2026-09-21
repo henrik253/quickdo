@@ -876,3 +876,33 @@ describe('archive', () => {
     expect(nothing.warning).toBe('nothing to archive');
   });
 });
+
+describe('sub-todos gate done (F-033)', () => {
+  it('[F-033] done is refused while a sub-todo is open and allowed once all are ticked', () => {
+    const withSubs = item({
+      id: 'A',
+      scheduledFor: TODAY,
+      subtasks: [
+        { id: 's1', title: 'print the outline', done: true },
+        { id: 's2', title: 'book the room', done: false },
+      ],
+    });
+    const state = stateWith([withSubs]);
+    const refused = reduce(state, { type: 'done', id: 'A' }, clock, settings);
+    expect(refused.changed).toBe(false);
+    expect(refused.warning).toBe('1 sub-todo still open');
+    const ticked = reduce(
+      state,
+      {
+        type: 'edit',
+        id: 'A',
+        patch: { subtasks: withSubs.subtasks?.map((st) => ({ ...st, done: true })) },
+      },
+      clock,
+      settings,
+    );
+    const done = reduce(ticked.state, { type: 'done', id: 'A' }, clock, settings);
+    expect(done.changed).toBe(true);
+    expect(done.state.todos.items[0].status).toBe('done');
+  });
+});

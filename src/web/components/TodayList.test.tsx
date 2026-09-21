@@ -367,4 +367,44 @@ describe('TodayList', () => {
       await Promise.resolve();
     });
   });
+
+  it('[F-033] the checkbox finishes a row, is disabled while sub-todos are open, and unticks to undo', async () => {
+    const fetchSpy = mockFetch(() => jsonResponse({ state: makeState([]) }));
+    seedStore(
+      makeState([
+        todayItem({ id: 'A', title: 'Read paper X' }),
+        todayItem({
+          id: 'B',
+          title: 'Prepare the thesis meeting',
+          subtasks: [{ id: 's1', title: 'print the outline', done: false }],
+        }),
+        todayItem({
+          id: 'C',
+          title: 'Done thing',
+          status: 'done',
+          completedAt: '2026-09-18T08:00:00+02:00',
+        }),
+      ]),
+    );
+    render(<Host />);
+    const ticks = screen.getAllByTestId(T.rowTick) as HTMLInputElement[];
+    const byId = (id: string) => ticks.find((t) => t.closest('li')?.dataset.id === id)!;
+    expect(byId('A').disabled).toBe(false);
+    expect(byId('B').disabled).toBe(true);
+    expect(byId('B').title).toContain('1 sub-todo still open');
+    expect(byId('C').checked).toBe(true);
+    fireEvent.click(byId('A'));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/items/A/done',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    fireEvent.click(byId('C'));
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/items/C/undo',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    await act(async () => {
+      await Promise.resolve();
+    });
+  });
 });

@@ -263,6 +263,10 @@ function done(ctx: Ctx, id: string, by?: string): ReduceResult {
   if (!item) return fail(ctx.state, 'not_found');
   if (item.status !== 'open' && item.status !== 'skipped')
     return fail(ctx.state, `already ${item.status}`);
+  const openSubtasks = (item.subtasks ?? []).filter((st) => !st.done).length;
+  if (openSubtasks > 0) {
+    return fail(ctx.state, `${openSubtasks} sub-todo${openSubtasks === 1 ? '' : 's'} still open`);
+  }
   if (item.repeat === undefined) {
     item.status = 'done';
     item.completedAt = ctx.now;

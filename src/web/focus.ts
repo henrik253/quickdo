@@ -116,7 +116,6 @@ export const KEY_HELP: ReadonlyArray<{ keys: string; what: string }> = [
   { keys: '.', what: 'fresh start' },
   { keys: 'a', what: 'accept the agent suggestion' },
   { keys: 'd', what: 'drop' },
-  { keys: 'p', what: 'Backlog ↔ Upcoming' },
   { keys: 'g e / g r / g s', what: 'evening ritual / review / sync now' },
   { keys: '?', what: 'this help' },
 ];
@@ -181,8 +180,6 @@ function mapList(ctx: FocusContext, ev: KeyInput): FocusAction {
       return { type: 'shiftBlock', minutes: 15 };
     case '.':
       return { type: 'freshStart' };
-    case 'p':
-      return { type: 'toggleView' };
     case 'g':
       return { type: 'chord', key: 'g' };
     case '?':

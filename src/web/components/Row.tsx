@@ -152,6 +152,8 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   const hasDetails = subtasks.length > 0 || Boolean(item.note);
   const isOpen = hasDetails && Boolean(expanded[item.id]);
   const subDone = subtasks.filter((st) => st.done).length;
+  const subOpen = subtasks.length - subDone;
+  const canFinish = isDone || subOpen === 0;
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard handling is global (list mode); the click only moves the cursor
@@ -166,6 +168,24 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         setMode('list');
       }}
     >
+      <input
+        type="checkbox"
+        className="tick"
+        data-testid={T.rowTick}
+        checked={isDone}
+        disabled={!canFinish}
+        aria-label={isDone ? `undo "${item.title}"` : `finish "${item.title}"`}
+        title={
+          canFinish
+            ? isDone
+              ? 'done — untick to reopen (u)'
+              : 'finish (x)'
+            : `${subOpen} sub-todo${subOpen === 1 ? '' : 's'} still open — tick them first`
+        }
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
+        onChange={() => void rowAction(item.id, isDone ? 'undo' : 'done')}
+      />
       <span className="mark" aria-hidden="true">
         {mark}
       </span>

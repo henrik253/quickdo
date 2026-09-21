@@ -35,6 +35,15 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
       computed (the tips use it); anchors/blocks still work via `@`, `[`, `]`, `+`. F-010 back to planned, F-009/F-012
       re-titled in `features.yaml`.
 
+## v0.5 — Checkbox and always-visible upcoming (2026-09-21)
+
+- [x] **Finish checkbox** (F-033): every row starts with a checkbox (tick = done, untick = undo; `x`/`u` still work).
+      A todo with sub-todos cannot be finished while one is open — the reducer's `done` refuses with
+      "N sub-todos still open", so the checkbox is disabled with that hint, `x` shows it as a chip, and an agent `done`
+      command is rejected the same way. Ticking the last sub-todo shows "tick the todo to finish it".
+- [x] **Upcoming always visible** (F-034): the `p` toggle is gone; the list is Today → upcoming days (grouped by date,
+      hidden when empty) → backlog. Cursor order follows (`visibleRows`). Upcoming rows are finished like any other.
+
 ## v0.4 — Multi-line captures with notes and sub-todos (2026-09-20)
 
 - [x] **Capture bar is a growing textarea** (F-031): Enter inserts a new line; Shift+Enter or the **Add** button submits;

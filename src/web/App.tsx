@@ -116,7 +116,6 @@ export function useKeyboard() {
 
 export function App() {
   const state = useStore((s) => s.state);
-  const view = useStore((s) => s.view);
   useKeyboard();
 
   useEffect(() => {
@@ -154,7 +153,8 @@ export function App() {
           <TodayList />
           <DoneChart />
           <HabitsStrip />
-          {view === 'backlog' ? <Backlog /> : <Upcoming />}
+          <Upcoming />
+          <Backlog />
         </div>
       </div>
       {state && (
