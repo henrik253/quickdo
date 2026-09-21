@@ -410,6 +410,9 @@ describe('TodayList', () => {
   });
 
   it('[F-035] unfold all is on by default: details show without clicking; a row can still be folded; the switch folds everything', () => {
+    localStorage.removeItem('quickdo.unfoldAll'); // an earlier test may have switched it off
+    resetStore();
+    expect(useStore.getState().unfoldAll).toBe(true);
     seedStore(
       makeState([
         todayItem({ id: 'A', title: 'A', note: 'note A' }),
