@@ -540,6 +540,8 @@ export function resetStore(): void {
     receivedAt: Date.now(),
     connected: false,
     toast: [],
+    expanded: {},
+    unfoldAll: readStorage(UNFOLD_ALL_KEY) !== 'off',
     draft: '',
     lastCapture: null,
     mode: 'capture',
