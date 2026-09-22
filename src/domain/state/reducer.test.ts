@@ -906,3 +906,43 @@ describe('sub-todos gate done (F-033)', () => {
     expect(done.state.todos.items[0].status).toBe('done');
   });
 });
+
+describe('ongoing items (F-037)', () => {
+  it('[F-037] rollover keeps ongoing items on Today without counting a reschedule; normal items go back to Backlog', () => {
+    const ongoing = item({
+      id: 'O',
+      scheduledFor: YESTERDAY,
+      ongoing: true,
+      ongoingSince: YESTERDAY,
+    });
+    const normal = item({ id: 'N', scheduledFor: YESTERDAY });
+    const state = stateWith([ongoing, normal], {
+      day: { date: YESTERDAY, freshStartAt: null, eveningRitualDone: false },
+    });
+    const r = reduce(state, { type: 'rollover' }, clock, settings);
+    const o = r.state.todos.items.find((i) => i.id === 'O')!;
+    const n = r.state.todos.items.find((i) => i.id === 'N')!;
+    expect(o.scheduledFor).toBe(TODAY);
+    expect(o.rescheduleCount).toBe(0);
+    expect(n.scheduledFor).toBeUndefined();
+    expect(n.rescheduleCount).toBe(1);
+    expect(r.events.filter((e) => e.type === 'rescheduled').map((e) => e.itemId)).toEqual(['N']);
+  });
+
+  it('[F-037] editing ongoing on sets ongoingSince and puts the item on Today; off clears both', () => {
+    const state = stateWith([item({ id: 'B' })]);
+    const on = reduce(state, { type: 'edit', id: 'B', patch: { ongoing: true } }, clock, settings);
+    const b = on.state.todos.items[0];
+    expect(b.ongoing).toBe(true);
+    expect(b.ongoingSince).toBe(TODAY);
+    expect(b.scheduledFor).toBe(TODAY);
+    const off = reduce(
+      on.state,
+      { type: 'edit', id: 'B', patch: { ongoing: undefined } },
+      clock,
+      settings,
+    );
+    expect(off.state.todos.items[0].ongoing).toBeUndefined();
+    expect(off.state.todos.items[0].ongoingSince).toBeUndefined();
+  });
+});

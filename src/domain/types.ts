@@ -51,6 +51,8 @@ export interface Item {
   title: string;
   note?: string;
   subtasks?: Subtask[]; // bullet lines of a multi-line capture
+  ongoing?: boolean; // `!ongoing`: stays on Today every day until done (never rolled back to Backlog)
+  ongoingSince?: ISODate;
   status: Status;
   scheduledFor?: ISODate; // present => on that day's list; absent => Backlog
   suggestedFor?: ISODate; // agent suggestion, never auto-applied
@@ -181,6 +183,7 @@ export interface HistoryEvent {
 
 export interface Token {
   kind:
+    | 'ongoing'
     | 'schedule'
     | 'block'
     | 'estimate'
@@ -208,6 +211,7 @@ export interface ParsedCapture {
   fallback?: Fallback;
   repeat?: Repeat;
   due?: ISODate;
+  ongoing?: boolean; // `!ongoing`
   filter?: string; // leading `?`: not a capture, a live filter
   note?: string; // lines after the heading that are not bullets, joined with newlines
   subtasks?: Array<{ title: string; done: boolean }>; // `- `, `* `, `[ ] `, `[x] ` lines after the heading
@@ -237,6 +241,7 @@ export type EditablePatch = Partial<
     | 'scheduledFor'
     | 'llm'
     | 'subtasks'
+    | 'ongoing'
   >
 >;
 

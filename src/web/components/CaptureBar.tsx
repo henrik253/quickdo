@@ -25,6 +25,8 @@ const NOUN_START = new Set([
 
 function chipLabel(token: Token, today: string, paddingSettings: typeof DEFAULT_SETTINGS): string {
   switch (token.kind) {
+    case 'ongoing':
+      return 'ongoing · stays on Today until done';
     case 'schedule':
       return /^\d{4}-\d{2}-\d{2}$/.test(token.value)
         ? capitalize(dateLabel(token.value, today))
@@ -150,7 +152,7 @@ export function CaptureBar() {
           data-testid={T.captureInput}
           rows={1}
           value={draft}
-          placeholder="Add a todo…  !today  @9  ~30m  #project  when …   ↵ new line: notes, - sub-todos · Shift+↵ adds   (? filters)"
+          placeholder="Add a todo…  !today  !ongoing  @9  ~30m  #project  when …   ↵ new line: notes, - sub-todos · Shift+↵ adds   (? filters)"
           autoComplete="off"
           autoCorrect="off"
           spellCheck={false}

@@ -94,6 +94,10 @@ export const INLINE_KEYS: Readonly<Record<string, InlineKind>> = {
 /** Human-readable key map for the `?` overlay. */
 export const KEY_HELP: ReadonlyArray<{ keys: string; what: string }> = [
   { keys: '/', what: 'focus the capture bar' },
+  {
+    keys: '!ongoing',
+    what: 'in the heading: stays on Today every day until done (edit to remove)',
+  },
   { keys: 'Shift+Enter', what: 'add the todo (Enter = new line: notes, - sub-todos)' },
   { keys: '⌘Enter', what: 'add to Today' },
   { keys: '↑', what: 'recall the last capture' },

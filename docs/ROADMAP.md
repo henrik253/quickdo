@@ -35,6 +35,14 @@ Legend: `[x]` done · `[~]` in progress · `[ ]` planned. Dates are absolute.
       computed (the tips use it); anchors/blocks still work via `@`, `[`, `]`, `+`. F-010 back to planned, F-009/F-012
       re-titled in `features.yaml`.
 
+## v0.6 — Ongoing work (2026-09-22)
+
+- [x] **`!ongoing`** (F-037): a heading token for work that takes several days. `item.ongoing` + `ongoingSince`;
+      the rollover moves such items forward to today instead of back to the Backlog (no `rescheduleCount`, no history
+      event); the row shows "ongoing · day N"; ongoing items are excluded from the soft Today cap. Editable: `!ongoing`
+      appears in the heading of the editor, deleting it makes the item normal again. Chosen over a `/ongoing` command
+      because `/` focuses the capture bar and `!` already means "which day".
+
 ## v0.5 — Checkbox and always-visible upcoming (2026-09-21)
 
 - [x] **Edit afterwards** (F-036): `e` or the ✎ button opens the todo as text in the capture syntax

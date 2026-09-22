@@ -99,6 +99,7 @@ const PATCH_KEYS = [
   'checkpoint',
   'scheduledFor',
   'subtasks',
+  'ongoing',
 ] as const;
 
 /** EditablePatch over JSON: `null` clears a field (except `checkpoint`, where null is a value). */
@@ -117,6 +118,7 @@ const PatchBody = ItemSchema.pick({
   checkpoint: true,
   scheduledFor: true,
   subtasks: true,
+  ongoing: true,
 })
   .partial()
   .strict();

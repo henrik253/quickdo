@@ -226,6 +226,7 @@ export function parseHeading(text: string, clock: Clock, settings: Settings): Pa
   let blockStart: HHMM | undefined;
   let wantsSlot: boolean | undefined;
   let cue: string | undefined;
+  let ongoing = false;
   let repeat: Repeat | undefined;
   let due: ISODate | undefined;
 
@@ -249,6 +250,14 @@ export function parseHeading(text: string, clock: Clock, settings: Settings): Pa
       continue;
     }
     if (t.startsWith('!') && t.length > 1) {
+      if (lower === '!ongoing') {
+        ongoing = true;
+        if (bangDate === undefined) bangDate = today; // starts today unless another day is given
+        explicitBacklog = false;
+        tokens.push({ kind: 'ongoing', raw: t, value: 'ongoing' });
+        i++;
+        continue;
+      }
       if (lower === '!backlog') {
         explicitBacklog = true;
         bangDate = undefined;
@@ -359,6 +368,7 @@ export function parseHeading(text: string, clock: Clock, settings: Settings): Pa
   if (estimateMin !== undefined) parsed.estimateMin = estimateMin;
   if (project !== undefined) parsed.project = project;
   if (cue !== undefined) parsed.cue = cue;
+  if (ongoing) parsed.ongoing = true;
   if (repeat !== undefined) parsed.repeat = repeat;
   if (due !== undefined) parsed.due = due;
 

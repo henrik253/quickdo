@@ -14,6 +14,7 @@ export function itemHeading(item: Item): string {
   if (item.estimateMin !== undefined) parts.push(`~${item.estimateMin}m`);
   if (item.due) parts.push(`due ${item.due}`);
   if (item.cue) parts.push(`when ${item.cue}`);
+  if (item.ongoing) parts.push('!ongoing');
   return parts.join(' ');
 }
 
@@ -54,12 +55,17 @@ export function editPatchFromText(
   if ((parsed.due ?? '') !== (item.due ?? '')) patch.due = parsed.due;
   if ((parsed.cue ?? '') !== (item.cue ?? '')) patch.cue = parsed.cue;
   // a `!day` token in the heading moves the item; without one the day is left alone
-  if (parsed.scheduledFor !== undefined && parsed.scheduledFor !== item.scheduledFor) {
+  const dayToken = parsed.tokens.some(
+    (t) => t.kind === 'schedule' || t.kind === 'slot' || t.kind === 'block',
+  );
+  if (dayToken && parsed.scheduledFor !== undefined && parsed.scheduledFor !== item.scheduledFor) {
     patch.scheduledFor = parsed.scheduledFor;
   }
   if (parsed.block && JSON.stringify(parsed.block) !== JSON.stringify(item.block))
     patch.block = parsed.block;
   if (parsed.repeat !== undefined && parsed.repeat !== item.repeat) patch.repeat = parsed.repeat;
+  if (Boolean(parsed.ongoing) !== Boolean(item.ongoing))
+    patch.ongoing = parsed.ongoing ? true : undefined;
 
   const before = item.subtasks ?? [];
   const pool = [...before];

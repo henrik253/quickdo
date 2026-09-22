@@ -203,7 +203,7 @@ export function derive(
     upcoming,
     progress,
     capacity,
-    overCap: today.length > settings.todayCap,
+    overCap: today.filter((it) => !it.ongoing).length > settings.todayCap,
     padded: paddedMap,
     slips,
     busy,

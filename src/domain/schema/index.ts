@@ -77,6 +77,8 @@ export const ItemSchema = z
     title: z.string().min(1).max(200),
     note: z.string().optional(),
     subtasks: z.array(SubtaskSchema).max(100).optional(),
+    ongoing: z.boolean().optional(),
+    ongoingSince: ISODate.optional(),
     status: StatusSchema,
     scheduledFor: ISODate.optional(),
     suggestedFor: ISODate.optional(),

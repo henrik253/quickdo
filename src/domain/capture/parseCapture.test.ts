@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clock, clockAt, settings } from '../testing/fixtures';
+import { clock, clockAt, settings, TODAY } from '../testing/fixtures';
 import type { Clock, ParsedCapture } from '../types';
 import { parseCapture } from './parseCapture';
 
@@ -365,5 +365,18 @@ describe('multi-line captures (F-031)', () => {
     const f = parseCapture('? alice\n- ignored', clock, settings);
     expect(f.filter).toBe('alice');
     expect(f.subtasks).toBeUndefined();
+  });
+});
+
+describe('!ongoing (F-037)', () => {
+  it('[F-037] !ongoing marks the capture ongoing and starts it today unless another day is given', () => {
+    const p = parseCapture('Write the thesis chapter !ongoing #thesis', clock, settings);
+    expect(p.ongoing).toBe(true);
+    expect(p.scheduledFor).toBe(TODAY);
+    expect(p.title).toBe('Write the thesis chapter');
+    expect(p.tokens.map((t) => t.kind)).toContain('ongoing');
+    const later = parseCapture('Refactor the parser !mon !ongoing', clock, settings);
+    expect(later.ongoing).toBe(true);
+    expect(later.scheduledFor).toBe('2026-09-21');
   });
 });

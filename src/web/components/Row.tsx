@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { editPatchFromText, itemToText } from '../../domain/capture/serialize';
 import { newId } from '../../domain/state/reducer';
+import { diffDays } from '../../domain/time';
 import { DEFAULT_SETTINGS, type Item } from '../../domain/types';
 import type { InlineKind } from '../focus';
 import { blockRange, dateLabel, fmtMin, parseHHMM, parseRescheduleInput } from '../format';
@@ -185,6 +186,7 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
   const hasDetails = subtasks.length > 0 || Boolean(item.note);
   const isOpen = hasDetails && (expanded[item.id] ?? unfoldAll);
   const subDone = subtasks.filter((st) => st.done).length;
+  const ongoingDay = item.ongoingSince ? Math.max(1, diffDays(item.ongoingSince, today) + 1) : 1;
   const subOpen = subtasks.length - subDone;
   const canFinish = isDone || subOpen === 0;
 
@@ -289,6 +291,16 @@ export function Row({ item, slip, pinnedCopy, extra, testId }: Props) {
         {item.rescheduleCount >= 3 && !isDone && (
           <span className="chip amber" data-testid={T.rowChip} data-kind="rescheduled">
             moved {item.rescheduleCount}×
+          </span>
+        )}
+        {item.ongoing && !isDone && (
+          <span
+            className="chip accent"
+            data-testid={T.rowChip}
+            data-kind="ongoing"
+            title={`ongoing since ${item.ongoingSince ?? '?'} — stays on Today until you finish it`}
+          >
+            ongoing · day {ongoingDay}
           </span>
         )}
         {subtasks.length > 0 && (

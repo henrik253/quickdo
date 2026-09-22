@@ -445,4 +445,18 @@ describe('TodayList', () => {
     act(() => useStore.getState().setUnfoldAll(true));
     expect(screen.getAllByTestId(T.rowDetails)).toHaveLength(2);
   });
+
+  it('[F-037] an ongoing row shows the day chip and does not count against the soft cap', () => {
+    const items = Array.from({ length: 5 }, (_, i) =>
+      todayItem({ id: `T${i}`, title: `Read paper X ${i}` }),
+    );
+    items.push(
+      todayItem({ id: 'O', title: 'Write the chapter', ongoing: true, ongoingSince: '2026-09-16' }),
+    );
+    seedStore(makeState(items));
+    render(<TodayList />);
+    expect(screen.getByTestId(T.todayHeader)).not.toHaveClass('amber');
+    const chip = screen.getAllByTestId(T.rowChip).find((c) => c.dataset.kind === 'ongoing');
+    expect(chip?.textContent).toBe('ongoing · day 3');
+  });
 });

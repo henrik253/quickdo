@@ -46,6 +46,7 @@ const EDITABLE_KEYS: ReadonlyArray<keyof EditablePatch> = [
   'scheduledFor',
   'llm',
   'subtasks',
+  'ongoing',
 ];
 
 const INGEST_GUARDED = new Set(['title', 'note', 'cue', 'due', 'estimateMin']);
@@ -217,6 +218,10 @@ function add(
   if (parsed.fallback !== undefined) item.fallback = { ...parsed.fallback };
   if (parsed.repeat !== undefined) item.repeat = parsed.repeat;
   if (parsed.due !== undefined) item.due = parsed.due;
+  if (parsed.ongoing) {
+    item.ongoing = true;
+    item.ongoingSince = ctx.today;
+  }
   if (parsed.note !== undefined) item.note = parsed.note;
   if (parsed.subtasks && parsed.subtasks.length > 0) {
     item.subtasks = parsed.subtasks.map((st) => ({
@@ -453,6 +458,15 @@ function edit(ctx: Ctx, id: string, patch: EditablePatch, by?: string): ReduceRe
   if (item.status === 'dropped') return fail(ctx.state, 'gone');
   const changed = applyPatch(item, patch, EDITABLE_KEYS);
   if (changed.length === 0) return fail(ctx.state, 'nothing to change');
+  if (changed.includes('ongoing')) {
+    if (item.ongoing) {
+      item.ongoingSince = ctx.today;
+      if (item.scheduledFor === undefined) item.scheduledFor = ctx.today;
+    } else {
+      delete item.ongoing;
+      delete item.ongoingSince;
+    }
+  }
   if (item.title.trim() === '') return fail(ctx.state, 'no title');
   touch(ctx, item);
   emit(ctx, 'edited', { itemId: item.id, by, detail: changed.join(',') });
@@ -496,11 +510,24 @@ function freshStart(ctx: Ctx): ReduceResult {
 function rollover(ctx: Ctx): ReduceResult {
   if (ctx.state.day.date === ctx.today) return { state: ctx.state, events: [], changed: false };
   ctx.state.day = { date: ctx.today, freshStartAt: null, eveningRitualDone: false };
+  // ongoing work follows the day: it stays on Today (no reschedule count, no history noise)
+  for (const it of ctx.state.todos.items) {
+    if (
+      it.ongoing &&
+      it.status === 'open' &&
+      it.scheduledFor !== undefined &&
+      it.scheduledFor < ctx.today
+    ) {
+      it.scheduledFor = ctx.today;
+      if (!it.ongoingSince) it.ongoingSince = ctx.today;
+    }
+  }
   const stale = ctx.state.todos.items
     .filter(
       (it) =>
         it.status === 'open' &&
         it.repeat === undefined &&
+        !it.ongoing &&
         it.scheduledFor !== undefined &&
         it.scheduledFor < ctx.today,
     )

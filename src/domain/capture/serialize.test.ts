@@ -66,3 +66,25 @@ describe('edit round trip (F-036)', () => {
     expect(moved).toEqual({ scheduledFor: '2026-09-18' });
   });
 });
+
+describe('ongoing round trip (F-037)', () => {
+  it('[F-037] the heading carries !ongoing; removing it clears the flag; re-saving an ongoing item is not a move', () => {
+    const it0 = item({
+      title: 'Write the chapter',
+      ongoing: true,
+      ongoingSince: '2026-09-10',
+      scheduledFor: '2026-09-18',
+    });
+    expect(itemToText(it0)).toBe('Write the chapter !ongoing');
+    expect(editPatchFromText(it0, 'Write the chapter !ongoing', clock, settings, newId)).toEqual(
+      {},
+    );
+    expect(editPatchFromText(it0, 'Write the chapter', clock, settings, newId)).toEqual({
+      ongoing: undefined,
+    });
+    const plain = item({ title: 'Call alice' });
+    expect(editPatchFromText(plain, 'Call alice !ongoing', clock, settings, newId)).toEqual({
+      ongoing: true,
+    });
+  });
+});
